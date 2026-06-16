@@ -1,0 +1,11 @@
+{
+  "name": "josh-rental-vetting",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Renter vetting intake + AI risk assessment dashboard",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.1",
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}

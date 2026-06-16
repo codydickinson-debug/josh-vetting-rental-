@@ -1,0 +1,3 @@
+﻿with-verification
+node_modules
+.env.local

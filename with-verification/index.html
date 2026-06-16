@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rental Application</title>
+<style>
+  :root{
+    --bg:#f3f4f6; --surface:#ffffff; --text:#15181d; --muted:#6b7280;
+    --border:#e4e7eb; --border-2:#d4d8de; --accent:#2563eb;
+    --primary:#16181d; --primary-h:#2b2f37;
+    --ok:#15803d; --ok-bg:#edf6ef; --ok-bd:#cfe6d5;
+    --warn:#b45309; --bad:#b91c1c; --bad-bg:#fbecea; --bad-bd:#f0cfcb;
+    --r:8px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:660px;margin:0 auto;padding:32px 18px 90px}
+
+  header.top{margin-bottom:8px}
+  header.top h1{font-size:22px;font-weight:650;letter-spacing:-.2px;margin:0}
+  header.top p{margin:6px 0 0;color:var(--muted);font-size:14px}
+  .pbar{height:5px;background:#e6e8ec;border-radius:999px;overflow:hidden;margin:18px 0 4px}
+  .pbar i{display:block;height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .4s ease}
+  .pmeta{font-size:12px;color:var(--muted);text-align:right}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 20px;margin-top:16px;box-shadow:0 1px 2px rgba(20,24,33,.04)}
+  .card h2{font-size:15px;font-weight:650;margin:0 0 2px;display:flex;align-items:baseline;gap:9px}
+  .card h2 .n{color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+  .card .hint{margin:2px 0 16px;color:var(--muted);font-size:13px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+  .grid .full{grid-column:1/-1}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  label.field{display:block;font-size:13px;font-weight:600;color:#37404b;margin-bottom:6px}
+  label.field .req{color:var(--bad)}
+  input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],select{
+    width:100%;padding:10px 12px;border:1px solid var(--border-2);border-radius:6px;font-size:14.5px;color:var(--text);background:var(--surface);font-family:var(--font);transition:border-color .12s,box-shadow .12s}
+  input::placeholder{color:#9aa1ab}
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.14)}
+  input.bad,select.bad{border-color:var(--bad);box-shadow:0 0 0 3px rgba(185,28,28,.12)}
+  .err{color:var(--bad);font-size:12.5px;margin-top:5px;display:none}
+  .err.show{display:block}
+
+  .checkrow{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--border-2);border-radius:6px;background:var(--surface);cursor:pointer;transition:.12s}
+  .checkrow:hover{background:#fafbfc}
+  .checkrow input{margin-top:1px;width:16px;height:16px;flex:none;accent-color:var(--accent)}
+  .checkrow span{font-size:13.5px}
+  .checkstack{display:flex;flex-direction:column;gap:8px}
+
+  .uploads{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:560px){.uploads{grid-template-columns:1fr}}
+  .drop{position:relative;border:1px dashed var(--border-2);border-radius:7px;padding:14px 10px;text-align:center;background:#fafbfc;cursor:pointer;transition:.12s}
+  .drop:hover{border-color:var(--accent);background:#f5f8ff}
+  .drop.has{border-style:solid;border-color:var(--ok-bd);background:var(--ok-bg)}
+  .drop .ttl{font-size:12.5px;font-weight:600}
+  .drop .desc{font-size:11px;color:var(--muted);margin-top:3px}
+  .drop.has .desc{color:var(--ok);font-weight:600}
+  .drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .drop .thumb{max-width:100%;max-height:78px;border-radius:5px;margin-top:8px;display:none}
+  .drop.has .thumb{display:inline-block}
+  .opt{font-weight:500;color:var(--muted);font-size:11px}
+
+  .formError{display:none;margin-top:16px;background:var(--bad-bg);border:1px solid var(--bad-bd);color:#8d2018;border-radius:6px;padding:11px 13px;font-size:13.5px;font-weight:600}
+  .formError.show{display:block}
+
+  .submitbar{margin-top:22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:9px;border:none;border-radius:7px;padding:12px 24px;font-family:var(--font);font-size:14.5px;font-weight:600;cursor:pointer;color:#fff;background:var(--primary);transition:background .12s}
+  .btn:hover{background:var(--primary-h)}
+  .btn[disabled]{opacity:.65;cursor:default}
+  .privacy{font-size:12.5px;color:var(--muted)}
+  .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+  .btn.loading .spinner{display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  #done{display:none}
+  #done.show{display:block}
+  .done-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:48px 30px;text-align:center;margin-top:24px;box-shadow:0 1px 2px rgba(20,24,33,.04)}
+  .done-card .badge{width:56px;height:56px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;font-size:26px;color:#fff;background:var(--ok)}
+  .done-card h2{font-size:20px;font-weight:650;margin:0 0 8px}
+  .done-card p{margin:0 auto;color:var(--muted);font-size:14.5px;max-width:420px}
+
+  /* verification widgets (Stripe / Canopy interactive mock) */
+  .verify-card{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid var(--border-2);border-radius:10px;padding:14px 16px;background:#fafbfc;flex-wrap:wrap}
+  .verify-card.done{border-color:var(--ok-bd);background:var(--ok-bg)}
+  .vc-left{display:flex;align-items:center;gap:13px}
+  .vc-logo{font-weight:700;font-size:13px;padding:6px 11px;border-radius:7px;color:#fff;white-space:nowrap;letter-spacing:.2px}
+  .vc-logo.stripe{background:#635bff}
+  .vc-logo.canopy{background:#0b8a6a}
+  .vc-title{font-weight:650;font-size:14.5px}
+  .vc-sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .vc-btn{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:11px 18px;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .vc-btn:hover{filter:brightness(1.12)}
+  .vc-done{display:flex;align-items:center;gap:8px;color:var(--ok);font-weight:650;font-size:14px}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(20,24,33,.55);display:none;align-items:center;justify-content:center;z-index:60;padding:18px}
+  .modal-bg.show{display:flex}
+  .modal{background:#fff;border-radius:16px;width:410px;max-width:100%;box-shadow:0 30px 70px rgba(0,0,0,.4);overflow:hidden}
+  .modal-top{padding:15px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .modal-top .brand{display:flex;align-items:center;gap:9px;font-weight:650;font-size:14px}
+  .modal-top .x{background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1}
+  .modal-body{padding:24px 22px;min-height:210px}
+  .m-title{font-size:17px;font-weight:650;margin:0 0 6px}
+  .m-sub{font-size:13.5px;color:var(--muted);margin:0 0 18px}
+  .steps-list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+  .steps-list li{display:flex;align-items:center;gap:11px;font-size:14px;color:var(--muted)}
+  .steps-list li.active{color:var(--text);font-weight:600}
+  .steps-list li.done{color:var(--ok)}
+  .step-ico{width:21px;height:21px;border-radius:50%;border:2px solid var(--border-2);flex:none;display:grid;place-items:center;font-size:12px;font-weight:700}
+  .steps-list li.done .step-ico{background:var(--ok);border-color:var(--ok);color:#fff}
+  .steps-list li.active .step-ico{border-color:var(--accent);color:var(--accent)}
+  .selfie-ring{width:120px;height:120px;border-radius:50%;border:3px dashed var(--accent);margin:6px auto 4px;display:grid;place-items:center;font-size:34px;color:var(--border-2)}
+  .carrier-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .carrier{border:1px solid var(--border-2);border-radius:9px;padding:13px 10px;text-align:center;font-weight:600;font-size:13.5px;cursor:pointer;background:#fff}
+  .carrier:hover{border-color:var(--accent);background:#f5f8ff}
+  .m-result{border:1px solid var(--ok-bd);background:var(--ok-bg);border-radius:9px;padding:14px;font-size:13px;margin-bottom:14px}
+  .m-result .rrow{display:flex;justify-content:space-between;gap:10px;padding:3px 0}
+  .m-result .rrow .k{color:var(--muted)}
+  .m-input{width:100%;padding:11px 12px;border:1px solid var(--border-2);border-radius:7px;font-size:14px;margin-bottom:10px;font-family:var(--font)}
+  .m-btn{width:100%;background:var(--primary);color:#fff;border:none;border-radius:8px;padding:12px;font-family:var(--font);font-size:14.5px;font-weight:600;cursor:pointer;margin-top:4px}
+  .m-badge{display:inline-flex;align-items:center;gap:6px;background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd);border-radius:6px;padding:5px 11px;font-size:12.5px;font-weight:650;margin-bottom:14px}
+  .m-center{text-align:center;padding:14px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Rental application</h1>
+    <p>Please complete all fields. Takes about 3 minutes. Your information is sent securely and reviewed by our team.</p>
+    <div class="pbar"><i id="pbar"></i></div>
+    <div class="pmeta"><span id="pct">0</span>% complete</div>
+  </header>
+
+  <form id="app" novalidate>
+
+    <!-- 1. APPLICANT -->
+    <section class="card" data-step>
+      <h2><span class="n">1</span> Your details</h2>
+      <p class="hint">How we reach you and confirm your identity.</p>
+      <div class="grid">
+        <div><label class="field" for="firstName">First name <span class="req">*</span></label>
+          <input type="text" id="firstName" autocomplete="given-name" /><div class="err" data-for="firstName">Required.</div></div>
+        <div><label class="field" for="lastName">Last name <span class="req">*</span></label>
+          <input type="text" id="lastName" autocomplete="family-name" /><div class="err" data-for="lastName">Required.</div></div>
+        <div><label class="field" for="dob">Date of birth <span class="req">*</span></label>
+          <input type="date" id="dob" /><div class="err" data-for="dob">Enter a valid date of birth.</div></div>
+        <div><label class="field" for="phone">Phone <span class="req">*</span></label>
+          <input type="tel" id="phone" placeholder="(555) 123-4567" autocomplete="tel" /><div class="err" data-for="phone">Enter a valid 10-digit phone.</div></div>
+        <div><label class="field" for="email">Email <span class="req">*</span></label>
+          <input type="email" id="email" placeholder="you@email.com" autocomplete="email" /><div class="err" data-for="email">Enter a valid email.</div></div>
+        <div><label class="field" for="yearsAddr">Years at current address <span class="req">*</span></label>
+          <input type="number" id="yearsAddr" min="0" max="80" step="1" placeholder="0" /><div class="err" data-for="yearsAddr">Required.</div></div>
+        <div class="full"><label class="field" for="address">Current address <span class="req">*</span></label>
+          <input type="text" id="address" placeholder="Street, City, State ZIP" autocomplete="street-address" /><div class="err" data-for="address">Enter a full street address.</div></div>
+      </div>
+    </section>
+
+    <!-- 2. RENTAL REQUEST -->
+    <section class="card" data-step>
+      <h2><span class="n">2</span> Rental request</h2>
+      <p class="hint">What you'd like to rent, and when.</p>
+      <div class="grid">
+        <div class="full"><label class="field" for="vehicle">Vehicle you'd like to rent <span class="req">*</span></label>
+          <input type="text" id="vehicle" placeholder="e.g. 2024 Tesla Model 3" /><div class="err" data-for="vehicle">Required.</div></div>
+        <div><label class="field" for="pickupDate">Pickup date</label><input type="date" id="pickupDate" /></div>
+        <div><label class="field" for="returnDate">Return date</label><input type="date" id="returnDate" /></div>
+      </div>
+    </section>
+
+    <!-- 3. ID -->
+    <section class="card" data-step>
+      <h2><span class="n">3</span> Driver's license</h2>
+      <p class="hint">We verify your government ID and a quick selfie instantly through Stripe Identity — no manual photo uploads needed.</p>
+      <div class="verify-card" id="idVerifyCard">
+        <div class="vc-left"><div class="vc-logo stripe">stripe</div><div><div class="vc-title">Verify your identity</div><div class="vc-sub" id="idVcSub">Scan your government ID + a quick selfie · ~30 seconds</div></div></div>
+        <button type="button" class="vc-btn" id="startIdVerify">Verify with Stripe Identity</button>
+      </div>
+      <div class="err" data-for="idVerify" style="margin-top:9px">Please verify your identity to continue.</div>
+      <div id="manualIdFields" style="display:none">
+        <label class="drop" id="dropFront"><input type="file" accept="image/*" id="fileFront" /><img class="thumb" alt="" /><span class="desc"></span></label>
+        <label class="drop" id="dropBack"><input type="file" accept="image/*" id="fileBack" /><img class="thumb" alt="" /><span class="desc"></span></label>
+        <label class="drop" id="dropSelfie"><input type="file" accept="image/*" id="fileSelfie" /><img class="thumb" alt="" /><span class="desc"></span></label>
+      </div>
+      <div class="grid" style="margin-top:16px">
+        <div><label class="field" for="licClass">License class <span class="req">*</span></label>
+          <input type="text" id="licClass" placeholder="e.g. Class C" /><div class="err" data-for="licClass">Required.</div></div>
+        <div><label class="field" for="licExp">License expiration date <span class="req">*</span></label>
+          <input type="date" id="licExp" /><div class="err" data-for="licExp">Required.</div></div>
+        <div class="full"><label class="checkrow"><input type="checkbox" id="nameMatch" />
+          <span>I confirm the name and date of birth on this application match my driver's license exactly.</span></label></div>
+      </div>
+    </section>
+
+    <!-- 3. DRIVING -->
+    <section class="card" data-step>
+      <h2><span class="n">4</span> Driving record</h2>
+      <p class="hint">Self-reported. Please be accurate — discrepancies with the official record can void approval.</p>
+      <div class="grid">
+        <div><label class="field" for="licStatus">License status <span class="req">*</span></label>
+          <select id="licStatus"><option value="">Select…</option><option value="valid">Valid &amp; current</option><option value="expired">Expired</option><option value="suspended">Suspended</option><option value="revoked">Revoked</option></select>
+          <div class="err" data-for="licStatus">Required.</div></div>
+        <div><label class="field" for="violations">Moving violations (3 yrs) <span class="req">*</span></label>
+          <input type="number" id="violations" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="violations">Required.</div></div>
+        <div><label class="field" for="accidents">At-fault accidents (3 yrs) <span class="req">*</span></label>
+          <input type="number" id="accidents" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="accidents">Required.</div></div>
+        <div><label class="field" for="dui">DUI / DWI (7 yrs) <span class="req">*</span></label>
+          <input type="number" id="dui" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="dui">Required.</div></div>
+        <div class="full"><div class="checkstack">
+          <label class="checkrow"><input type="checkbox" id="priorSusp" /><span>I have had a license suspension in the past 5 years.</span></label>
+          <label class="checkrow"><input type="checkbox" id="reckless" /><span>I have a reckless-driving citation in the past 5 years.</span></label>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- 4. INSURANCE -->
+    <section class="card" data-step>
+      <h2><span class="n">5</span> Insurance</h2>
+      <p class="hint">If you carry a policy, upload your insurance card or declaration page so we can confirm the coverage. No policy? You may be offered our protection plan.</p>
+      <div class="grid">
+        <div class="full"><label class="field">Do you carry an active auto-insurance policy? <span class="req">*</span></label>
+          <div class="checkstack">
+            <label class="checkrow"><input type="radio" name="hasIns" value="yes" /><span>Yes — I have an active policy</span></label>
+            <label class="checkrow"><input type="radio" name="hasIns" value="no" /><span>No — I don't have my own policy</span></label>
+          </div><div class="err" data-for="hasIns">Please choose one.</div></div>
+        <div class="full" id="canopyWrap" style="display:none">
+          <div class="verify-card" id="insVerifyCard">
+            <div class="vc-left"><div class="vc-logo canopy">Canopy</div><div><div class="vc-title">Verify your insurance</div><div class="vc-sub" id="insVcSub">Connect your policy — pulled straight from your carrier in seconds</div></div></div>
+            <button type="button" class="vc-btn" id="startInsVerify">Connect &amp; verify</button>
+          </div>
+          <div class="err" data-for="insVerify" style="margin-top:9px">Please verify your insurance, or choose "No policy" above.</div>
+        </div>
+        <div class="full" id="manualInsFields" style="display:none"><div class="grid">
+          <div><label class="field" for="insProvider">Insurance provider</label><input type="text" id="insProvider" /></div>
+          <div><label class="field" for="insPolicy">Policy # (last 4)</label><input type="text" id="insPolicy" maxlength="4" /></div>
+          <div><label class="field" for="insExp">Policy expiration date</label><input type="date" id="insExp" /></div>
+          <div><label class="drop" id="dropInsurance" style="display:none"><input type="file" accept="image/*" id="fileInsurance" /><img class="thumb" alt="" /><span class="desc"></span></label></div>
+          <div class="full"><div class="checkstack">
+            <label class="checkrow"><input type="checkbox" id="insGood" /><span>Active &amp; in good standing.</span></label>
+            <label class="checkrow"><input type="checkbox" id="insListed" /><span>Named insured / listed driver.</span></label>
+            <label class="checkrow"><input type="checkbox" id="insLimits" /><span>Coverage meets state-minimum limits.</span></label>
+          </div></div>
+        </div></div>
+      </div>
+    </section>
+
+    <!-- 5. HISTORY + CONSENT -->
+    <section class="card" data-step>
+      <h2><span class="n">6</span> Rental history</h2>
+      <p class="hint">First-time renters are welcome. Honesty here builds trust.</p>
+      <div class="grid">
+        <div class="full"><label class="field">Have you rented a vehicle before? <span class="req">*</span></label>
+          <div class="checkstack">
+            <label class="checkrow"><input type="radio" name="rentedBefore" value="yes" /><span>Yes — I've rented before</span></label>
+            <label class="checkrow"><input type="radio" name="rentedBefore" value="no" /><span>No — this is my first rental</span></label>
+          </div><div class="err" data-for="rentedBefore">Please choose one.</div></div>
+        <div><label class="field" for="lateReturns">Late returns (lifetime)</label><input type="number" id="lateReturns" min="0" max="50" step="1" placeholder="0" /></div>
+        <div><label class="field" for="damageClaims">Damage claims (lifetime)</label><input type="number" id="damageClaims" min="0" max="50" step="1" placeholder="0" /></div>
+        <div><label class="field" for="smoking">Smoking / cleaning incidents</label><input type="number" id="smoking" min="0" max="50" step="1" placeholder="0" /></div>
+        <div><label class="field" for="chargebacks">Payment chargebacks / disputes</label><input type="number" id="chargebacks" min="0" max="50" step="1" placeholder="0" /></div>
+        <div class="full"><label class="checkrow"><input type="checkbox" id="commIssues" /><span>I've had a serious communication or no-show issue with a previous rental.</span></label></div>
+        <div class="full"><div class="checkstack">
+          <label class="checkrow"><input type="checkbox" id="refsAvailable" /><span>I can provide references on request.</span></label>
+          <label class="checkrow"><input type="checkbox" id="consent" /><span>I authorize verification of my driving record, identity, and the information I've provided, and confirm it is accurate. <span class="req">*</span></span></label>
+        </div><div class="err" data-for="consent">You must authorize verification to submit.</div></div>
+      </div>
+    </section>
+
+    <div class="formError" id="formError">Please fix the highlighted fields above before submitting.</div>
+
+    <div class="submitbar">
+      <button type="submit" class="btn" id="submitBtn"><span class="spinner"></span><span class="label">Submit application</span></button>
+      <span class="privacy">Sent securely · nothing is shared publicly</span>
+    </div>
+  </form>
+
+  <div id="done">
+    <div class="done-card">
+      <div class="badge">✓</div>
+      <h2>Application received</h2>
+      <p>Thanks, <span id="doneName">there</span>. Your application is in and our team will review it and reach out shortly. You can close this page.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-top"><div class="brand" id="modalBrand"></div><button type="button" class="x" id="modalX">×</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script src="demo-engine.js"></script>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const uploads = { front: null, back: null, selfie: null, insurance: null };
+let ID_VERIF = null, INS_VERIF = null;
+
+function downscale(file, maxEdge = 1400, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read failed"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("decode failed"));
+      img.onload = () => {
+        let { width: w, height: h } = img;
+        if (Math.max(w, h) > maxEdge) { const s = maxEdge / Math.max(w, h); w = Math.round(w * s); h = Math.round(h * s); }
+        const c = document.createElement("canvas"); c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function wireUpload(fileId, dropId, key) {
+  const input = $(fileId), drop = $(dropId), thumb = drop.querySelector(".thumb"), desc = drop.querySelector(".desc");
+  input.addEventListener("change", async () => {
+    const f = input.files && input.files[0];
+    if (!f) { uploads[key] = null; drop.classList.remove("has"); desc.textContent = "Tap to upload"; thumb.src = ""; updateProgress(); return; }
+    if (!f.type.startsWith("image/")) { alert("Please choose an image file."); input.value = ""; return; }
+    desc.textContent = "Processing…";
+    try {
+      const dataUrl = await downscale(f);
+      uploads[key] = dataUrl; thumb.src = dataUrl; drop.classList.add("has"); desc.textContent = "✓ Uploaded";
+      showErr("uploads", false); updateProgress();
+    } catch (e) { desc.textContent = "Couldn't read that image — try again"; }
+  });
+}
+wireUpload("fileFront", "dropFront", "front");
+wireUpload("fileBack", "dropBack", "back");
+wireUpload("fileSelfie", "dropSelfie", "selfie");
+wireUpload("fileInsurance", "dropInsurance", "insurance");
+
+function showErr(key, on) {
+  const el = document.querySelector('.err[data-for="' + key + '"]');
+  if (el) el.classList.toggle("show", on);
+  const inp = $(key); if (inp) inp.classList.toggle("bad", on);
+}
+function emailValid(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e); }
+function phoneDigits(p) { return (p.match(/\d/g) || []).length; }
+function ageFromDOB(s) {
+  if (!s) return null; const d = new Date(s + "T00:00:00"); if (isNaN(d)) return null;
+  const n = new Date(); let a = n.getFullYear() - d.getFullYear();
+  const m = n.getMonth() - d.getMonth(); if (m < 0 || (m === 0 && n.getDate() < d.getDate())) a--; return a;
+}
+function validate() {
+  document.querySelectorAll(".err.show").forEach((e) => e.classList.remove("show"));
+  document.querySelectorAll(".bad").forEach((e) => e.classList.remove("bad"));
+  $("formError").classList.remove("show");
+  const errs = [];
+  ["firstName", "lastName", "vehicle", "address", "licClass"].forEach((id) => { if (!$(id).value.trim()) { showErr(id, true); errs.push(id); } });
+  ["yearsAddr", "violations", "accidents", "dui"].forEach((id) => { if ($(id).value.trim() === "") { showErr(id, true); errs.push(id); } });
+  const age = ageFromDOB($("dob").value);
+  if (age === null || age < 14 || age > 110) { showErr("dob", true); errs.push("dob"); }
+  if (phoneDigits($("phone").value) < 10) { showErr("phone", true); errs.push("phone"); }
+  if (!emailValid($("email").value.trim())) { showErr("email", true); errs.push("email"); }
+  if (!$("licExp").value) { showErr("licExp", true); errs.push("licExp"); }
+  if (!$("licStatus").value) { showErr("licStatus", true); errs.push("licStatus"); }
+  if (!ID_VERIF) { showErr("idVerify", true); errs.push("idVerify"); }
+  if (!$("consent").checked) { showErr("consent", true); errs.push("consent"); }
+  const insChoice = document.querySelector('input[name="hasIns"]:checked');
+  if (!insChoice) { showErr("hasIns", true); errs.push("hasIns"); }
+  else if (insChoice.value === "yes" && !INS_VERIF) { showErr("insVerify", true); errs.push("insVerify"); }
+  if (!document.querySelector('input[name="rentedBefore"]:checked')) { showErr("rentedBefore", true); errs.push("rentedBefore"); }
+  if (errs.length) {
+    $("formError").classList.add("show");
+    const first = document.querySelector(".err.show, .bad");
+    if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  return errs.length === 0;
+}
+function updateProgress() {
+  let filled = 0, total = 0;
+  document.querySelectorAll("#app input, #app select").forEach((el) => {
+    if (el.type === "file" || el.type === "checkbox" || el.offsetParent === null) return;
+    total++;
+    if (el.type === "radio") { if (el.checked) filled++; }
+    else if (el.value.trim()) filled++;
+  });
+  // radios counted per option; collapse to per-group
+  const radios = {};
+  document.querySelectorAll('#app input[type="radio"]').forEach((r) => { radios[r.name] = radios[r.name] || { any: false, n: 0 }; radios[r.name].n++; if (r.checked) radios[r.name].any = true; });
+  Object.values(radios).forEach((g) => { total -= g.n; total += 1; }); // each group = 1 field
+  // ID verification as one field
+  total += 1; if (ID_VERIF) filled += 1;
+  const pct = total ? Math.min(100, Math.round((filled / total) * 100)) : 0;
+  $("pbar").style.width = pct + "%"; $("pct").textContent = pct;
+}
+document.querySelectorAll("#app input, #app select").forEach((el) => {
+  el.addEventListener("input", () => { if (el.id) showErr(el.id, false); updateProgress(); });
+  el.addEventListener("change", updateProgress);
+});
+document.querySelectorAll('input[name="hasIns"]').forEach((el) => el.addEventListener("change", () => showErr("hasIns", false)));
+document.querySelectorAll('input[name="rentedBefore"]').forEach((el) => el.addEventListener("change", () => showErr("rentedBefore", false)));
+$("consent").addEventListener("change", () => showErr("consent", false));
+
+function gather() {
+  const insR = document.querySelector('input[name="hasIns"]:checked');
+  const rentR = document.querySelector('input[name="rentedBefore"]:checked');
+  return {
+    firstName: $("firstName").value.trim(), lastName: $("lastName").value.trim(),
+    vehicle: $("vehicle").value.trim(), pickupDate: $("pickupDate").value, returnDate: $("returnDate").value,
+    dob: $("dob").value, phone: $("phone").value.trim(), email: $("email").value.trim(),
+    address: $("address").value.trim(), yearsAddr: $("yearsAddr").value,
+    licClass: $("licClass").value.trim(), licExp: $("licExp").value, nameMatch: $("nameMatch").checked,
+    licStatus: $("licStatus").value, violations: $("violations").value, accidents: $("accidents").value, dui: $("dui").value,
+    priorSusp: $("priorSusp").checked, reckless: $("reckless").checked, refsAvailable: $("refsAvailable").checked,
+    consent: $("consent").checked,
+    hasIns: insR ? insR.value : "", insProvider: $("insProvider").value.trim(), insPolicy: $("insPolicy").value.trim(), insExp: $("insExp").value,
+    insGood: $("insGood").checked, insListed: $("insListed").checked, insLimits: $("insLimits").checked,
+    rentedBefore: rentR ? rentR.value : "",
+    lateReturns: $("lateReturns").value, damageClaims: $("damageClaims").value, smoking: $("smoking").value, chargebacks: $("chargebacks").value,
+    commIssues: $("commIssues").checked,
+    photos: { front: uploads.front, back: uploads.back, selfie: uploads.selfie, insurance: uploads.insurance },
+    verifications: { id: ID_VERIF, insurance: INS_VERIF },
+  };
+}
+function finishSubmit() {
+  $("doneName").textContent = $("firstName").value.trim() || "there";
+  $("app").style.display = "none"; $("done").classList.add("show"); window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function showSubmitError(msg) {
+  const btn = $("submitBtn");
+  btn.classList.remove("loading"); btn.disabled = false; btn.querySelector(".label").textContent = "Submit application";
+  $("formError").textContent = "Something went wrong submitting your application: " + msg + ". Please try again.";
+  $("formError").classList.add("show"); $("formError").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+$("app").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!validate()) return;
+  const btn = $("submitBtn");
+  btn.classList.add("loading"); btn.disabled = true; btn.querySelector(".label").textContent = "Submitting…";
+  const payload = gather();
+  let res;
+  try {
+    res = await fetch("/api/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  } catch (netErr) {
+    if (window.DEMO) window.DEMO.saveLocal(payload);
+    return finishSubmit();
+  }
+  if (!res.ok) {
+    let j = null; try { j = await res.json(); } catch (e) {}
+    if (j && j.error) return showSubmitError(j.error);
+    if (window.DEMO) window.DEMO.saveLocal(payload);
+    return finishSubmit();
+  }
+  finishSubmit();
+});
+
+/* ---------- interactive Stripe Identity / Canopy Connect mock ---------- */
+const modalBg = $("modalBg"), modalBody = $("modalBody"), modalBrand = $("modalBrand");
+function openModal(brandHtml) { modalBrand.innerHTML = brandHtml; modalBg.classList.add("show"); }
+function closeModal() { modalBg.classList.remove("show"); modalBody.innerHTML = ""; }
+$("modalX").addEventListener("click", closeModal);
+modalBg.addEventListener("click", (e) => { if (e.target === modalBg) closeModal(); });
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+function applicantName() { return (($("firstName").value.trim() + " " + $("lastName").value.trim()).trim()) || "Applicant"; }
+function rand4() { return String(Math.floor(1000 + Math.random() * 9000)); }
+
+$("startIdVerify").addEventListener("click", stripeFlow);
+async function stripeFlow() {
+  openModal('<div class="vc-logo stripe">stripe</div> Identity');
+  modalBody.innerHTML = `<h3 class="m-title">Verify your identity</h3><p class="m-sub">We'll scan your government ID and check a quick selfie. (Interactive demo of the Stripe Identity flow.)</p><button class="m-btn" id="mStart">Start verification</button>`;
+  $("mStart").addEventListener("click", async () => {
+    modalBody.innerHTML = `<div class="m-center"><div class="selfie-ring">☺</div><p class="m-sub">Center your face…</p></div>`;
+    await wait(900);
+    const steps = ["Capturing document", "Reading security features", "Cross-checking PDF417 barcode", "Liveness &amp; face match"];
+    modalBody.innerHTML = `<ul class="steps-list" id="mSteps">${steps.map((s) => `<li><span class="step-ico"></span>${s}</li>`).join("")}</ul>`;
+    const lis = [...modalBody.querySelectorAll("#mSteps li")];
+    for (let i = 0; i < lis.length; i++) {
+      lis[i].classList.add("active"); lis[i].querySelector(".step-ico").innerHTML = '<span class="mspin" style="width:13px;height:13px;border-width:2px"></span>';
+      await wait(800);
+      lis[i].classList.remove("active"); lis[i].classList.add("done"); lis[i].querySelector(".step-ico").textContent = "✓";
+    }
+    await wait(300);
+    const name = applicantName(), dob = $("dob").value || "1990-01-01", exp = $("licExp").value || "2030-01-01";
+    const docNo = "D" + Math.floor(100000000 + Math.random() * 899999999);
+    ID_VERIF = { verified: true, provider: "Stripe Identity", name, dob, document_number: docNo, expiration: exp, document_status: "authentic", face_match: "98%", checked_at: new Date().toISOString() };
+    if (!$("nameMatch").checked) $("nameMatch").checked = true;
+    if (!$("licExp").value) $("licExp").value = exp;
+    modalBody.innerHTML = `<div class="m-badge">✓ Identity verified</div>
+      <div class="m-result">
+        <div class="rrow"><span class="k">Name</span><b>${name}</b></div>
+        <div class="rrow"><span class="k">Date of birth</span><b>${dob}</b></div>
+        <div class="rrow"><span class="k">Document #</span><b>${docNo}</b></div>
+        <div class="rrow"><span class="k">Expires</span><b>${exp}</b></div>
+        <div class="rrow"><span class="k">Document</span><b style="color:var(--ok)">Authentic</b></div>
+        <div class="rrow"><span class="k">Face match</span><b style="color:var(--ok)">98%</b></div>
+      </div><button class="m-btn" id="mDone">Done</button>`;
+    $("mDone").addEventListener("click", () => {
+      closeModal();
+      const c = $("idVerifyCard"); c.classList.add("done");
+      c.innerHTML = `<div class="vc-left"><div class="vc-logo stripe">stripe</div><div><div class="vc-title">Identity verified</div><div class="vc-sub">${name} · document authentic · face match 98%</div></div></div><div class="vc-done">✓ Verified</div>`;
+      showErr("idVerify", false); updateProgress();
+    });
+  });
+}
+
+const CARRIERS = ["Geico", "Progressive", "State Farm", "Allstate", "USAA", "Liberty Mutual", "Nationwide", "Farmers"];
+$("startInsVerify").addEventListener("click", canopyFlow);
+function canopyFlow() {
+  openModal('<div class="vc-logo canopy">Canopy</div> Connect');
+  modalBody.innerHTML = `<h3 class="m-title">Connect your insurance</h3><p class="m-sub">Select your carrier to securely pull your policy. (Interactive demo of the Canopy Connect flow.)</p><div class="carrier-grid">${CARRIERS.map((c) => `<div class="carrier" data-c="${c}">${c}</div>`).join("")}</div>`;
+  modalBody.querySelectorAll(".carrier").forEach((el) => el.addEventListener("click", () => carrierSignin(el.getAttribute("data-c"))));
+}
+function carrierSignin(carrier) {
+  modalBody.innerHTML = `<h3 class="m-title">${carrier}</h3><p class="m-sub">Sign in to your insurer (demo — any values work).</p>
+    <input class="m-input" id="cUser" placeholder="Username" value="demo.user"><input class="m-input" id="cPass" type="password" placeholder="Password" value="demopass1"><button class="m-btn" id="cConnect">Connect securely</button>`;
+  $("cConnect").addEventListener("click", () => canopyRetrieve(carrier));
+}
+async function canopyRetrieve(carrier) {
+  modalBody.innerHTML = `<div class="m-center"><div class="mspin" style="margin:14px auto"></div><p class="m-sub" id="cMsg">Connecting to ${carrier}…</p></div>`;
+  await wait(1000); if ($("cMsg")) $("cMsg").textContent = "Retrieving your policy…"; await wait(1100);
+  const name = applicantName(), policy = rand4(), exp = "2026-12-15", eff = "2026-06-15", veh = $("vehicle").value.trim() || "Listed vehicle";
+  INS_VERIF = { verified: true, provider: "Canopy Connect", carrier, policy_number: "••••" + policy, named_insured: name, status: "Active", effective: eff, expiration: exp, coverage: "100/300/100", vehicle: veh, matches_applicant: true, checked_at: new Date().toISOString() };
+  $("insProvider").value = carrier; $("insPolicy").value = policy; $("insExp").value = exp;
+  $("insGood").checked = true; $("insListed").checked = true; $("insLimits").checked = true;
+  modalBody.innerHTML = `<div class="m-badge">✓ Active policy found</div>
+    <div class="m-result">
+      <div class="rrow"><span class="k">Carrier</span><b>${carrier}</b></div>
+      <div class="rrow"><span class="k">Policy #</span><b>••••${policy}</b></div>
+      <div class="rrow"><span class="k">Status</span><b style="color:var(--ok)">Active</b></div>
+      <div class="rrow"><span class="k">Named insured</span><b>${name}</b></div>
+      <div class="rrow"><span class="k">Term</span><b>${eff} → ${exp}</b></div>
+      <div class="rrow"><span class="k">Liability limits</span><b>100/300/100</b></div>
+      <div class="rrow"><span class="k">Named insured matches</span><b style="color:var(--ok)">✓ Yes</b></div>
+    </div><button class="m-btn" id="cDone">Done</button>`;
+  $("cDone").addEventListener("click", () => {
+    closeModal();
+    const c = $("insVerifyCard"); c.classList.add("done");
+    c.innerHTML = `<div class="vc-left"><div class="vc-logo canopy">Canopy</div><div><div class="vc-title">Insurance verified</div><div class="vc-sub">${carrier} · active · named insured matches</div></div></div><div class="vc-done">✓ Verified</div>`;
+    showErr("insVerify", false); updateProgress();
+  });
+}
+
+document.querySelectorAll('input[name="hasIns"]').forEach((el) => el.addEventListener("change", () => {
+  const yes = document.querySelector('input[name="hasIns"]:checked');
+  $("canopyWrap").style.display = (yes && yes.value === "yes") ? "block" : "none";
+  if (!yes || yes.value !== "yes") { INS_VERIF = null; }
+}));
+
+updateProgress();
+</script>
+</body>
+</html>
