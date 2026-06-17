@@ -404,7 +404,7 @@ function renderDetail(r) {
 }
 
 function logout() { sessionStorage.removeItem("vetkey"); KEY = ""; $("login").style.display = "grid"; $("pw").value = ""; $("pw").focus(); }
-$("loginBtn").addEventListener("click", () => { KEY = $("pw").value; sessionStorage.setItem("vetkey", KEY); $("loginErr").classList.remove("show"); load(); });
+$("loginBtn").addEventListener("click", () => { KEY = $("pw").value.trim(); sessionStorage.setItem("vetkey", KEY); $("loginErr").classList.remove("show"); load(); });
 $("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("loginBtn").click(); });
 $("refresh").addEventListener("click", load);
 $("logout").addEventListener("click", logout);
