@@ -140,8 +140,6 @@
       </div>
       <div class="err" data-for="uploads" style="margin-top:9px">Please upload all three photos.</div>
       <div class="grid" style="margin-top:16px">
-        <div><label class="field" for="licClass">License class <span class="req">*</span></label>
-          <input type="text" id="licClass" placeholder="e.g. Class C" /><div class="err" data-for="licClass">Required.</div></div>
         <div><label class="field" for="licExp">License expiration date <span class="req">*</span></label>
           <input type="date" id="licExp" /><div class="err" data-for="licExp">Required.</div></div>
         <div class="full"><label class="checkrow"><input type="checkbox" id="nameMatch" />
@@ -286,7 +284,7 @@ function validate() {
   document.querySelectorAll(".bad").forEach((e) => e.classList.remove("bad"));
   $("formError").classList.remove("show");
   const errs = [];
-  ["firstName", "lastName", "vehicle", "address", "licClass"].forEach((id) => { if (!$(id).value.trim()) { showErr(id, true); errs.push(id); } });
+  ["firstName", "lastName", "vehicle", "address"].forEach((id) => { if (!$(id).value.trim()) { showErr(id, true); errs.push(id); } });
   ["yearsAddr", "violations", "accidents", "dui"].forEach((id) => { if ($(id).value.trim() === "") { showErr(id, true); errs.push(id); } });
   const age = ageFromDOB($("dob").value);
   if (age === null || age < 14 || age > 110) { showErr("dob", true); errs.push("dob"); }
@@ -338,7 +336,7 @@ function gather() {
     vehicle: $("vehicle").value.trim(), pickupDate: $("pickupDate").value, returnDate: $("returnDate").value,
     dob: $("dob").value, phone: $("phone").value.trim(), email: $("email").value.trim(),
     address: $("address").value.trim(), yearsAddr: $("yearsAddr").value,
-    licClass: $("licClass").value.trim(), licExp: $("licExp").value, nameMatch: $("nameMatch").checked,
+    licExp: $("licExp").value, nameMatch: $("nameMatch").checked,
     licStatus: $("licStatus").value, violations: $("violations").value, accidents: $("accidents").value, dui: $("dui").value,
     priorSusp: $("priorSusp").checked, reckless: $("reckless").checked,
     consent: $("consent").checked,

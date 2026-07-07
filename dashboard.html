@@ -418,7 +418,7 @@ function renderDetail(r) {
     ["Date of birth", `${esc(d.dob)}${d.age != null ? " (" + d.age + " yrs)" : ""}`],
     ["Phone", esc(d.phone)], ["Email", esc(d.email)],
     ["Address", `${esc(d.address)} (${d.yearsAddr} yr)`],
-    ["License", `${esc(d.licClass)} · ${esc(d.licStatus)} · exp ${esc(d.licExp)}`],
+    ["License", [d.licClass && esc(d.licClass), esc(d.licStatus), "exp " + esc(d.licExp)].filter(Boolean).join(" · ")],
     ["Driving", `${d.violations} violations · ${d.accidents} at-fault · ${d.dui} DUI${d.priorSusp ? " · prior suspension" : ""}${d.reckless ? " · reckless" : ""}`],
     ["Insurance", d.hasIns === "yes" ? `${esc(d.insProvider || "—")} ••${esc(d.insPolicy || "----")}${d.insExp ? " · exp " + esc(d.insExp) : ""}` : "No personal policy"],
     ["Rental history", d.rentedBefore === "yes" ? "Has rented before" : "First-time renter"],
