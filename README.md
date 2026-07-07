@@ -74,6 +74,45 @@ Redeploy after adding them (`vercel --prod`).
 - Score weights, thresholds, and decline rules: top of `lib/scoring.js` (`CONFIG`).
 - AI behavior / what Claude is asked to judge: the `SYSTEM` prompt in `lib/ai.js`.
 
+## Finishing the Vouched & Plaid setup
+
+The integrations are **already wired** and lie dormant until their env vars are set —
+with no keys, the form and dashboard behave exactly as before. What's wired:
+
+- **Vouched (real ID verification + liveness):** the form offers an "Instant ID check"
+  in the Driver's license step (camera capture via the Vouched plugin; manual photo
+  uploads become optional once verified). The server pulls the job result and stores it
+  on the submission; the dashboard shows a "Third-party verifications" section
+  (verified/not, name + DOB read off the ID, confidence scores, issues); the AI is told
+  to weigh it above self-reported data.
+- **Plaid (bank verification):** an optional "Connect bank" card before the submit
+  button (Plaid Link). The server exchanges the token, pulls account-holder identity,
+  and stores institution, holder names, and whether the holder matches the applicant.
+  Access tokens never leave the server.
+
+To turn them on:
+
+1. **Vouched** — create an account at https://www.vouched.id → dashboard → **Keys**.
+   Copy the **public key** and **private key**.
+2. **Plaid** — create an account at https://dashboard.plaid.com → **Developers → Keys**.
+   Copy the **client_id** and the **sandbox secret** (request Production access from
+   Plaid when ready and switch the secret + `PLAID_ENV`).
+3. In Vercel → Project → Settings → Environment Variables (Production + Preview), add:
+
+   | Name | Value |
+   |------|-------|
+   | `VOUCHED_PUBLIC_KEY` | Vouched public key |
+   | `VOUCHED_PRIVATE_KEY` | Vouched private key |
+   | `PLAID_CLIENT_ID` | Plaid client id |
+   | `PLAID_SECRET` | Plaid secret for the chosen env |
+   | `PLAID_ENV` | `sandbox` at first, `production` later |
+
+4. Redeploy, then check `https://YOUR-APP/api/verification-config` — it should report
+   both as `"enabled": true`, and the new steps appear on the form automatically.
+   Test with Plaid sandbox credentials (`user_good` / `pass_good`) before going live.
+
+You can enable just one of the two — each is independent.
+
 ## What the AI checks — and what it can't (important)
 The AI assessment (Claude, with vision on the uploaded photos) does four things:
 1. **Identity cross-check** — reads the name, DOB, license #, expiry and address off the

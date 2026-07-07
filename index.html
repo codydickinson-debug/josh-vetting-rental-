@@ -6,54 +6,61 @@
 <title>Rental Application</title>
 <style>
   :root{
-    --bg:#f3f4f6; --surface:#ffffff; --text:#15181d; --muted:#6b7280;
-    --border:#e4e7eb; --border-2:#d4d8de; --accent:#2563eb;
-    --primary:#16181d; --primary-h:#2b2f37;
+    --bg:#f4f5f7; --surface:#ffffff; --text:#141821; --muted:#68707d;
+    --border:#e5e8ec; --border-2:#d3d8df; --accent:#1d4ed8; --accent-soft:#eef3fe;
+    --primary:#141821; --primary-h:#2a3140;
     --ok:#15803d; --ok-bg:#edf6ef; --ok-bd:#cfe6d5;
     --warn:#b45309; --bad:#b91c1c; --bad-bg:#fbecea; --bad-bd:#f0cfcb;
-    --r:8px;
+    --r:10px;
+    --shadow:0 1px 2px rgba(16,20,28,.05),0 6px 20px -12px rgba(16,20,28,.12);
     --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
-  body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:660px;margin:0 auto;padding:32px 18px 90px}
+  body{font-family:var(--font);background:linear-gradient(180deg,#edf0f4 0%,var(--bg) 260px);color:var(--text);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased;min-height:100vh}
+  body::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),#5b8def);z-index:10}
+  .wrap{max-width:660px;margin:0 auto;padding:40px 18px 90px}
 
-  header.top{margin-bottom:8px}
-  header.top h1{font-size:22px;font-weight:650;letter-spacing:-.2px;margin:0}
-  header.top p{margin:6px 0 0;color:var(--muted);font-size:14px}
-  .pbar{height:5px;background:#e6e8ec;border-radius:999px;overflow:hidden;margin:18px 0 4px}
-  .pbar i{display:block;height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .4s ease}
-  .pmeta{font-size:12px;color:var(--muted);text-align:right}
+  header.top{margin-bottom:10px}
+  header.top .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:7px}
+  header.top h1{font-size:26px;font-weight:700;letter-spacing:-.4px;margin:0}
+  header.top p{margin:8px 0 0;color:var(--muted);font-size:14.5px;max-width:520px}
+  .pbar{height:6px;background:#e3e6eb;border-radius:999px;overflow:hidden;margin:20px 0 5px}
+  .pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#5b8def);border-radius:999px;transition:width .45s cubic-bezier(.4,0,.2,1)}
+  .pmeta{font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
 
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 20px;margin-top:16px;box-shadow:0 1px 2px rgba(20,24,33,.04)}
-  .card h2{font-size:15px;font-weight:650;margin:0 0 2px;display:flex;align-items:baseline;gap:9px}
-  .card h2 .n{color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
-  .card .hint{margin:2px 0 16px;color:var(--muted);font-size:13px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px 24px 22px;margin-top:16px;box-shadow:var(--shadow)}
+  @media(max-width:560px){.card{padding:20px 16px 18px}}
+  .card h2{font-size:16px;font-weight:650;margin:0 0 3px;display:flex;align-items:center;gap:10px;letter-spacing:-.1px}
+  .card h2 .n{display:inline-grid;place-items:center;width:24px;height:24px;flex:none;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+  .card .hint{margin:3px 0 18px;color:var(--muted);font-size:13px;padding-left:34px}
+  @media(max-width:560px){.card .hint{padding-left:0}}
 
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
   .grid .full{grid-column:1/-1}
   @media(max-width:560px){.grid{grid-template-columns:1fr}}
-  label.field{display:block;font-size:13px;font-weight:600;color:#37404b;margin-bottom:6px}
+  label.field{display:block;font-size:13px;font-weight:600;color:#374050;margin-bottom:7px}
   label.field .req{color:var(--bad)}
   input[type=text],input[type=email],input[type=tel],input[type=date],input[type=number],select{
-    width:100%;padding:10px 12px;border:1px solid var(--border-2);border-radius:6px;font-size:14.5px;color:var(--text);background:var(--surface);font-family:var(--font);transition:border-color .12s,box-shadow .12s}
+    width:100%;padding:11px 13px;border:1px solid var(--border-2);border-radius:8px;font-size:14.5px;color:var(--text);background:var(--surface);font-family:var(--font);transition:border-color .15s,box-shadow .15s}
   input::placeholder{color:#9aa1ab}
-  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.14)}
+  input:hover:not(:focus),select:hover:not(:focus){border-color:#bfc6d0}
+  input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,78,216,.13)}
   input.bad,select.bad{border-color:var(--bad);box-shadow:0 0 0 3px rgba(185,28,28,.12)}
   .err{color:var(--bad);font-size:12.5px;margin-top:5px;display:none}
   .err.show{display:block}
 
-  .checkrow{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--border-2);border-radius:6px;background:var(--surface);cursor:pointer;transition:.12s}
-  .checkrow:hover{background:#fafbfc}
+  .checkrow{display:flex;align-items:flex-start;gap:11px;padding:11px 13px;border:1px solid var(--border-2);border-radius:8px;background:var(--surface);cursor:pointer;transition:border-color .15s,background .15s}
+  .checkrow:hover{background:#fafbfc;border-color:#bfc6d0}
+  .checkrow:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
   .checkrow input{margin-top:1px;width:16px;height:16px;flex:none;accent-color:var(--accent)}
   .checkrow span{font-size:13.5px}
   .checkstack{display:flex;flex-direction:column;gap:8px}
 
   .uploads{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
   @media(max-width:560px){.uploads{grid-template-columns:1fr}}
-  .drop{position:relative;border:1px dashed var(--border-2);border-radius:7px;padding:14px 10px;text-align:center;background:#fafbfc;cursor:pointer;transition:.12s}
-  .drop:hover{border-color:var(--accent);background:#f5f8ff}
+  .drop{position:relative;display:block;border:1.5px dashed var(--border-2);border-radius:9px;padding:15px 10px;text-align:center;background:#fafbfc;cursor:pointer;transition:border-color .15s,background .15s}
+  .drop:hover{border-color:var(--accent);background:var(--accent-soft)}
   .drop.has{border-style:solid;border-color:var(--ok-bd);background:var(--ok-bg)}
   .drop .ttl{font-size:12.5px;font-weight:600}
   .drop .desc{font-size:11px;color:var(--muted);margin-top:3px}
@@ -66,10 +73,11 @@
   .formError{display:none;margin-top:16px;background:var(--bad-bg);border:1px solid var(--bad-bd);color:#8d2018;border-radius:6px;padding:11px 13px;font-size:13.5px;font-weight:600}
   .formError.show{display:block}
 
-  .submitbar{margin-top:22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .btn{display:inline-flex;align-items:center;gap:9px;border:none;border-radius:7px;padding:12px 24px;font-family:var(--font);font-size:14.5px;font-weight:600;cursor:pointer;color:#fff;background:var(--primary);transition:background .12s}
-  .btn:hover{background:var(--primary-h)}
-  .btn[disabled]{opacity:.65;cursor:default}
+  .submitbar{margin-top:24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:9px;border:none;border-radius:9px;padding:13px 26px;font-family:var(--font);font-size:14.5px;font-weight:600;cursor:pointer;color:#fff;background:var(--primary);box-shadow:0 1px 2px rgba(16,20,28,.2);transition:background .15s,transform .15s,box-shadow .15s}
+  .btn:hover{background:var(--primary-h);transform:translateY(-1px);box-shadow:0 4px 12px -4px rgba(16,20,28,.35)}
+  .btn:active{transform:translateY(0);box-shadow:0 1px 2px rgba(16,20,28,.2)}
+  .btn[disabled]{opacity:.65;cursor:default;transform:none;box-shadow:none}
   .privacy{font-size:12.5px;color:var(--muted)}
   .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
   .btn.loading .spinner{display:inline-block}
@@ -77,9 +85,10 @@
 
   #done{display:none}
   #done.show{display:block}
-  .done-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:48px 30px;text-align:center;margin-top:24px;box-shadow:0 1px 2px rgba(20,24,33,.04)}
-  .done-card .badge{width:56px;height:56px;border-radius:50%;margin:0 auto 18px;display:grid;place-items:center;font-size:26px;color:#fff;background:var(--ok)}
-  .done-card h2{font-size:20px;font-weight:650;margin:0 0 8px}
+  .done-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:56px 30px;text-align:center;margin-top:24px;box-shadow:var(--shadow)}
+  .done-card .badge{width:62px;height:62px;border-radius:50%;margin:0 auto 20px;display:grid;place-items:center;font-size:28px;color:#fff;background:var(--ok);box-shadow:0 0 0 10px var(--ok-bg);animation:pop .45s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .done-card h2{font-size:21px;font-weight:700;margin:0 0 8px;letter-spacing:-.2px}
   .done-card p{margin:0 auto;color:var(--muted);font-size:14.5px;max-width:420px}
 </style>
 </head>
@@ -87,6 +96,7 @@
 <div class="wrap">
 
   <header class="top">
+    <div class="eyebrow">Vehicle rental</div>
     <h1>Rental application</h1>
     <p>Please complete all fields. Takes about 3 minutes. Your information is sent securely and reviewed by our team.</p>
     <div class="pbar"><i id="pbar"></i></div>
@@ -133,6 +143,16 @@
     <section class="card" data-step>
       <h2><span class="n">3</span> Driver's license</h2>
       <p class="hint">Upload clear photos. The details on your license must match what you entered above — we check them.</p>
+
+      <!-- Instant ID verification (Vouched) — hidden unless the server reports it configured -->
+      <div id="vouchedBox" style="display:none;border:1px solid var(--border);border-radius:7px;padding:14px;margin-bottom:14px;background:#f5f8ff">
+        <div style="font-weight:600;font-size:13.5px">Instant ID check <span class="opt">(fastest)</span></div>
+        <div style="font-size:13px;color:var(--muted);margin:4px 0 10px">Verify your license and a quick selfie with your camera — takes about a minute. If you'd rather not, just upload the photos below instead.</div>
+        <button type="button" class="btn" id="vouchedStart" style="padding:9px 16px;font-size:13.5px">Start ID verification</button>
+        <div id="vouchedStatus" style="display:none;font-size:13px;font-weight:600;color:var(--ok);margin-top:8px">✓ ID verified</div>
+        <div id="vouchedMount" style="margin-top:12px"></div>
+      </div>
+
       <div class="uploads">
         <label class="drop" id="dropFront"><div class="ttl">License — front</div><div class="desc">Tap to upload</div><img class="thumb" alt="" /><input type="file" accept="image/*" id="fileFront" /></label>
         <label class="drop" id="dropBack"><div class="ttl">License — back</div><div class="desc">Tap to upload</div><img class="thumb" alt="" /><input type="file" accept="image/*" id="fileBack" /></label>
@@ -206,6 +226,14 @@
       </div>
     </section>
 
+    <!-- Optional bank verification (Plaid) — hidden unless the server reports it configured -->
+    <section class="card" id="plaidBox" style="display:none">
+      <h2>Bank verification <span class="opt" style="font-size:12px">(optional — strengthens your application)</span></h2>
+      <p class="hint">Securely connect your bank so we can confirm the account is in your name. We never see your login and can't move money.</p>
+      <button type="button" class="btn" id="plaidStart" style="padding:10px 18px;font-size:13.5px">Connect bank</button>
+      <div id="plaidStatus" style="display:none;font-size:13px;font-weight:600;color:var(--ok);margin-top:8px">✓ Bank connected</div>
+    </section>
+
     <div class="formError" id="formError">Please fix the highlighted fields above before submitting.</div>
 
     <div class="submitbar">
@@ -228,6 +256,8 @@
 "use strict";
 const $ = (id) => document.getElementById(id);
 const uploads = { front: null, back: null, selfie: null, insurance: null };
+// Third-party verification state (Vouched ID check / Plaid bank link).
+const VERIF = { vouchedJobId: null, vouchedJobToken: null, plaidPublicToken: null, plaidInstitution: null };
 
 function downscale(file, maxEdge = 1400, quality = 0.82) {
   return new Promise((resolve, reject) => {
@@ -292,7 +322,8 @@ function validate() {
   if (!emailValid($("email").value.trim())) { showErr("email", true); errs.push("email"); }
   if (!$("licExp").value) { showErr("licExp", true); errs.push("licExp"); }
   if (!$("licStatus").value) { showErr("licStatus", true); errs.push("licStatus"); }
-  if (!uploads.front || !uploads.back || !uploads.selfie) { showErr("uploads", true); errs.push("uploads"); }
+  // Manual photos are required unless the renter completed the instant ID check.
+  if (!VERIF.vouchedJobId && (!uploads.front || !uploads.back || !uploads.selfie)) { showErr("uploads", true); errs.push("uploads"); }
   if (!$("consent").checked) { showErr("consent", true); errs.push("consent"); }
   if (!document.querySelector('input[name="hasIns"]:checked')) { showErr("hasIns", true); errs.push("hasIns"); }
   if (!document.querySelector('input[name="rentedBefore"]:checked')) { showErr("rentedBefore", true); errs.push("rentedBefore"); }
@@ -315,8 +346,8 @@ function updateProgress() {
   const radios = {};
   document.querySelectorAll('#app input[type="radio"]').forEach((r) => { radios[r.name] = radios[r.name] || { any: false, n: 0 }; radios[r.name].n++; if (r.checked) radios[r.name].any = true; });
   Object.values(radios).forEach((g) => { total -= g.n; total += 1; }); // each group = 1 field
-  // required uploads as one field
-  total += 1; if (uploads.front && uploads.back && uploads.selfie) filled += 1;
+  // required uploads as one field (a successful instant ID check counts too)
+  total += 1; if ((uploads.front && uploads.back && uploads.selfie) || VERIF.vouchedJobId) filled += 1;
   const pct = total ? Math.min(100, Math.round((filled / total) * 100)) : 0;
   $("pbar").style.width = pct + "%"; $("pct").textContent = pct;
 }
@@ -344,10 +375,13 @@ function gather() {
     insGood: $("insGood").checked, insListed: $("insListed").checked, insLimits: $("insLimits").checked,
     rentedBefore: rentR ? rentR.value : "",
     photos: { front: uploads.front, back: uploads.back, selfie: uploads.selfie, insurance: uploads.insurance },
+    vouchedJobId: VERIF.vouchedJobId, vouchedJobToken: VERIF.vouchedJobToken,
+    plaidPublicToken: VERIF.plaidPublicToken, plaidInstitution: VERIF.plaidInstitution,
   };
 }
 function finishSubmit() {
   $("doneName").textContent = $("firstName").value.trim() || "there";
+  $("pbar").style.width = "100%"; $("pct").textContent = "100";
   $("app").style.display = "none"; $("done").classList.add("show"); window.scrollTo({ top: 0, behavior: "smooth" });
 }
 function showSubmitError(msg) {
@@ -381,6 +415,106 @@ $("app").addEventListener("submit", async (e) => {
   finishSubmit();
 });
 updateProgress();
+
+// ============================================================================
+// Optional third-party verification (Vouched ID check + Plaid bank link).
+// The server's /api/verification-config says which are configured; with no
+// keys set (or no backend at all) nothing below changes the form.
+// ============================================================================
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src; s.async = true;
+    s.onload = resolve; s.onerror = () => reject(new Error("failed to load " + src));
+    document.head.appendChild(s);
+  });
+}
+
+function wireVouched(cfg) {
+  $("vouchedBox").style.display = "block";
+  $("vouchedStart").addEventListener("click", async () => {
+    const btn = $("vouchedStart");
+    btn.disabled = true; btn.textContent = "Loading…";
+    try {
+      if (!window.Vouched) await loadScript("https://static.vouched.id/plugin/releases/v2/index.js");
+      const vouched = window.Vouched({
+        appId: cfg.publicKey,
+        publicKey: cfg.publicKey,
+        type: "idv",
+        verification: {
+          firstName: $("firstName").value.trim(), lastName: $("lastName").value.trim(),
+          email: $("email").value.trim(), phone: $("phone").value.trim(),
+        },
+        liveness: "straight",
+        onDone: (job) => {
+          // onDone fires for FAILED checks too — only a successful job counts
+          // as verified and waives the manual photo uploads.
+          const passed = !!(job && job.id && job.result && job.result.success === true);
+          $("vouchedMount").innerHTML = "";
+          if (passed) {
+            VERIF.vouchedJobId = job.id;
+            VERIF.vouchedJobToken = job.token || null;
+            $("vouchedStatus").style.display = "block";
+            btn.style.display = "none";
+            showErr("uploads", false);
+          } else {
+            VERIF.vouchedJobId = null; VERIF.vouchedJobToken = null;
+            btn.disabled = false; btn.textContent = "Retry ID verification";
+            const st = $("vouchedStatus");
+            st.style.display = "block"; st.style.color = "var(--bad)";
+            st.textContent = "The instant check didn't pass — try again or upload your photos below.";
+          }
+          updateProgress();
+        },
+      });
+      vouched.mount("#vouchedMount");
+      btn.textContent = "Start ID verification";
+    } catch (e) {
+      btn.disabled = false; btn.textContent = "Start ID verification";
+      alert("The instant ID check couldn't start — please upload your photos below instead.");
+    }
+  });
+}
+
+function wirePlaid() {
+  $("plaidBox").style.display = "block";
+  $("plaidStart").addEventListener("click", async () => {
+    const btn = $("plaidStart");
+    btn.disabled = true; btn.textContent = "Loading…";
+    try {
+      if (!window.Plaid) await loadScript("https://cdn.plaid.com/link/v2/stable/link-initialize.js");
+      const res = await fetch("/api/plaid-link-token", { method: "POST" });
+      const j = await res.json();
+      if (!res.ok || !j.link_token) throw new Error(j.error || "no link token");
+      const handler = window.Plaid.create({
+        token: j.link_token,
+        onSuccess: (publicToken, metadata) => {
+          VERIF.plaidPublicToken = publicToken;
+          VERIF.plaidInstitution = metadata && metadata.institution ? metadata.institution.name : null;
+          $("plaidStatus").style.display = "block";
+          $("plaidStatus").textContent = "✓ Bank connected" + (VERIF.plaidInstitution ? " — " + VERIF.plaidInstitution : "");
+          btn.style.display = "none";
+        },
+        onExit: () => { btn.disabled = false; btn.textContent = "Connect bank"; },
+      });
+      handler.open();
+      btn.textContent = "Connect bank";
+    } catch (e) {
+      btn.disabled = false; btn.textContent = "Connect bank";
+      alert("Bank verification couldn't start — you can skip this step.");
+    }
+  });
+}
+
+(async () => {
+  let cfg = null;
+  try {
+    const res = await fetch("/api/verification-config");
+    if (res.ok) cfg = await res.json();
+  } catch (e) { /* no backend (local/demo) — leave both hidden */ }
+  if (cfg && cfg.vouched && cfg.vouched.enabled && cfg.vouched.publicKey) wireVouched(cfg.vouched);
+  if (cfg && cfg.plaid && cfg.plaid.enabled) wirePlaid();
+})();
 </script>
 </body>
 </html>

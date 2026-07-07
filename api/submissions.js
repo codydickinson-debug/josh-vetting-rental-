@@ -43,6 +43,8 @@ export default async function handler(req, res) {
     const photos = row.photos || {};
     row.photo_urls = {};
     for (const key of PHOTO_KEYS) row.photo_urls[key] = photos[key] ? signedByPath[photos[key]] || null : null;
+    // Plaid access tokens stay server-side only — never ship them to the browser.
+    if (row.verification && row.verification.plaid) delete row.verification.plaid.access_token;
   }
 
   return res.status(200).json({ submissions: data });

@@ -9,6 +9,7 @@ import { randomUUID } from "node:crypto";
 import { getAdminClient, PHOTO_BUCKET } from "../lib/db.js";
 import { normalize, assess } from "../lib/scoring.js";
 import { runAIAssessment } from "../lib/ai.js";
+import { fetchVouchedJob, fetchPlaidSummary, vouchedEnabled, plaidEnabled } from "../lib/verification.js";
 
 function dataUrlToBuffer(dataUrl) {
   const m = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/.exec(dataUrl || "");
@@ -56,13 +57,29 @@ export default async function handler(req, res) {
     if (!error) photos[key] = path;
   }
 
+  // --- third-party verifications (optional; only run when the renter used them) ---
+  // Gated on the provider being configured so crafted POSTs can't trigger
+  // lookups or store junk in the dormant state; ids are client-supplied,
+  // so cap their size (fetchVouchedJob binds the result to the applicant).
+  const applicantName = `${profile.firstName} ${profile.lastName}`.trim();
+  const verification = {};
+  if (body.vouchedJobId && vouchedEnabled()) {
+    verification.vouched = await fetchVouchedJob(String(body.vouchedJobId).slice(0, 64), applicantName);
+  }
+  if (body.plaidPublicToken && plaidEnabled()) {
+    verification.plaid = await fetchPlaidSummary(String(body.plaidPublicToken).slice(0, 256), applicantName);
+    if (verification.plaid && !verification.plaid.error && body.plaidInstitution) {
+      verification.plaid.institution = String(body.plaidInstitution).slice(0, 120);
+    }
+  }
+
   // --- AI assessment (sees the photos via the original data URLs) ---
-  const ai = await runAIAssessment({ profile, ruleResult, photos: photoDataUrls });
+  const ai = await runAIAssessment({ profile, ruleResult, photos: photoDataUrls, verification });
 
   // --- persist ---
   const row = {
     id,
-    applicant_name: `${profile.firstName} ${profile.lastName}`.trim(),
+    applicant_name: applicantName,
     email: profile.email,
     rule_total: ruleResult.total,
     ai_score: Number.isInteger(ai?.ai_score) ? ai.ai_score : null,
@@ -71,6 +88,7 @@ export default async function handler(req, res) {
     scores: ruleResult,
     ai,
     photos,
+    verification: Object.keys(verification).length ? verification : null,
   };
 
   const { error: insertErr } = await supabase.from("vetting_submissions").insert(row);

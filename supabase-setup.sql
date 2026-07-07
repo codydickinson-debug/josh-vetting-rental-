@@ -14,11 +14,13 @@ create table if not exists public.vetting_submissions (
   scores          jsonb,   -- rule-engine breakdown (categories + flags)
   ai              jsonb,   -- Claude assessment (or { error })
   photos          jsonb,   -- storage paths { front, back, selfie, insurance }
-  staff           jsonb    -- your decision: { decision, note, decided_at }
+  staff           jsonb,   -- your decision: { decision, note, decided_at }
+  verification    jsonb    -- third-party results { vouched, plaid }
 );
 
--- If the table already existed (e.g. from an earlier version), add the new column:
+-- If the table already existed (e.g. from an earlier version), add the new columns:
 alter table public.vetting_submissions add column if not exists staff jsonb;
+alter table public.vetting_submissions add column if not exists verification jsonb;
 
 create index if not exists vetting_submissions_created_idx
   on public.vetting_submissions (created_at desc);
