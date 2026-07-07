@@ -3,7 +3,7 @@
 // Body:   { id, decision: "approve"|"decline"|"followup"|"", note }
 // Requires the `staff` jsonb column (see supabase-setup.sql).
 
-import { getAdminClient } from "../lib/db.js";
+import { getAdminClient, friendlyDbError } from "../lib/db.js";
 
 const DECISIONS = new Set(["approve", "decline", "followup", ""]);
 
@@ -30,6 +30,6 @@ export default async function handler(req, res) {
 
   const staff = { decision, note, decided_at: new Date().toISOString() };
   const { error } = await supabase.from("vetting_submissions").update({ staff }).eq("id", id);
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({ error: friendlyDbError(error.message) });
   return res.status(200).json({ ok: true, staff });
 }

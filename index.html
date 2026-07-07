@@ -196,22 +196,15 @@
     <!-- 5. HISTORY + CONSENT -->
     <section class="card" data-step>
       <h2><span class="n">6</span> Rental history</h2>
-      <p class="hint">First-time renters are welcome. Honesty here builds trust.</p>
+      <p class="hint">First-time renters are welcome.</p>
       <div class="grid">
         <div class="full"><label class="field">Have you rented a vehicle before? <span class="req">*</span></label>
           <div class="checkstack">
             <label class="checkrow"><input type="radio" name="rentedBefore" value="yes" /><span>Yes — I've rented before</span></label>
             <label class="checkrow"><input type="radio" name="rentedBefore" value="no" /><span>No — this is my first rental</span></label>
           </div><div class="err" data-for="rentedBefore">Please choose one.</div></div>
-        <div><label class="field" for="lateReturns">Late returns (lifetime)</label><input type="number" id="lateReturns" min="0" max="50" step="1" placeholder="0" /></div>
-        <div><label class="field" for="damageClaims">Damage claims (lifetime)</label><input type="number" id="damageClaims" min="0" max="50" step="1" placeholder="0" /></div>
-        <div><label class="field" for="smoking">Smoking / cleaning incidents</label><input type="number" id="smoking" min="0" max="50" step="1" placeholder="0" /></div>
-        <div><label class="field" for="chargebacks">Payment chargebacks / disputes</label><input type="number" id="chargebacks" min="0" max="50" step="1" placeholder="0" /></div>
-        <div class="full"><label class="checkrow"><input type="checkbox" id="commIssues" /><span>I've had a serious communication or no-show issue with a previous rental.</span></label></div>
-        <div class="full"><div class="checkstack">
-          <label class="checkrow"><input type="checkbox" id="refsAvailable" /><span>I can provide references on request.</span></label>
-          <label class="checkrow"><input type="checkbox" id="consent" /><span>I authorize verification of my driving record, identity, and the information I've provided, and confirm it is accurate. <span class="req">*</span></span></label>
-        </div><div class="err" data-for="consent">You must authorize verification to submit.</div></div>
+        <div class="full"><label class="checkrow"><input type="checkbox" id="consent" /><span>I authorize verification of my driving record, identity, and the information I've provided, and confirm it is accurate. <span class="req">*</span></span></label>
+        <div class="err" data-for="consent">You must authorize verification to submit.</div></div>
       </div>
     </section>
 
@@ -347,13 +340,11 @@ function gather() {
     address: $("address").value.trim(), yearsAddr: $("yearsAddr").value,
     licClass: $("licClass").value.trim(), licExp: $("licExp").value, nameMatch: $("nameMatch").checked,
     licStatus: $("licStatus").value, violations: $("violations").value, accidents: $("accidents").value, dui: $("dui").value,
-    priorSusp: $("priorSusp").checked, reckless: $("reckless").checked, refsAvailable: $("refsAvailable").checked,
+    priorSusp: $("priorSusp").checked, reckless: $("reckless").checked,
     consent: $("consent").checked,
     hasIns: insR ? insR.value : "", insProvider: $("insProvider").value.trim(), insPolicy: $("insPolicy").value.trim(), insExp: $("insExp").value,
     insGood: $("insGood").checked, insListed: $("insListed").checked, insLimits: $("insLimits").checked,
     rentedBefore: rentR ? rentR.value : "",
-    lateReturns: $("lateReturns").value, damageClaims: $("damageClaims").value, smoking: $("smoking").value, chargebacks: $("chargebacks").value,
-    commIssues: $("commIssues").checked,
     photos: { front: uploads.front, back: uploads.back, selfie: uploads.selfie, insurance: uploads.insurance },
   };
 }
@@ -367,6 +358,9 @@ function showSubmitError(msg) {
   $("formError").textContent = "Something went wrong submitting your application: " + msg + ". Please try again.";
   $("formError").classList.add("show"); $("formError").scrollIntoView({ behavior: "smooth", block: "center" });
 }
+// The no-backend demo fallback must never swallow a real failure on the live
+// site — a renter would see "received" while the application went nowhere.
+const IS_LOCAL = location.protocol === "file:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 $("app").addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!validate()) return;
@@ -377,14 +371,14 @@ $("app").addEventListener("submit", async (e) => {
   try {
     res = await fetch("/api/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
   } catch (netErr) {
-    if (window.DEMO) window.DEMO.saveLocal(payload);
-    return finishSubmit();
+    if (IS_LOCAL && window.DEMO) { window.DEMO.saveLocal(payload); return finishSubmit(); }
+    return showSubmitError("connection problem — check your internet and try again");
   }
   if (!res.ok) {
     let j = null; try { j = await res.json(); } catch (e) {}
     if (j && j.error) return showSubmitError(j.error);
-    if (window.DEMO) window.DEMO.saveLocal(payload);
-    return finishSubmit();
+    if (IS_LOCAL && window.DEMO) { window.DEMO.saveLocal(payload); return finishSubmit(); }
+    return showSubmitError("server error " + res.status);
   }
   finishSubmit();
 });

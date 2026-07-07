@@ -2,7 +2,7 @@
 // Header: x-dashboard-key: <DASHBOARD_PASSWORD>
 // Returns all submissions newest-first, with short-lived signed URLs for the photos.
 
-import { getAdminClient, PHOTO_BUCKET } from "../lib/db.js";
+import { getAdminClient, PHOTO_BUCKET, friendlyDbError } from "../lib/db.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -24,21 +24,25 @@ export default async function handler(req, res) {
     .select("*")
     .order("created_at", { ascending: false })
     .limit(500);
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({ error: friendlyDbError(error.message) });
 
-  // sign photo URLs (1 hour)
+  // sign photo URLs (1 hour) — one batch call for every path; the dashboard
+  // polls this endpoint, so per-photo round-trips would compound quickly.
+  const PHOTO_KEYS = ["front", "back", "selfie", "insurance"];
+  const allPaths = [];
   for (const row of data) {
-    const signed = {};
     const photos = row.photos || {};
-    for (const key of ["front", "back", "selfie", "insurance"]) {
-      if (photos[key]) {
-        const { data: s } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrl(photos[key], 3600);
-        signed[key] = s?.signedUrl || null;
-      } else {
-        signed[key] = null;
-      }
-    }
-    row.photo_urls = signed;
+    for (const key of PHOTO_KEYS) if (photos[key]) allPaths.push(photos[key]);
+  }
+  const signedByPath = {};
+  if (allPaths.length) {
+    const { data: signedList } = await supabase.storage.from(PHOTO_BUCKET).createSignedUrls(allPaths, 3600);
+    for (const s of signedList || []) if (s && s.path && s.signedUrl) signedByPath[s.path] = s.signedUrl;
+  }
+  for (const row of data) {
+    const photos = row.photos || {};
+    row.photo_urls = {};
+    for (const key of PHOTO_KEYS) row.photo_urls[key] = photos[key] ? signedByPath[photos[key]] || null : null;
   }
 
   return res.status(200).json({ submissions: data });

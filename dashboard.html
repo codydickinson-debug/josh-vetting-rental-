@@ -214,20 +214,31 @@ function effectiveStaff(r) { return (r && r.staff) || getDemoDecisions()[r.id] |
 function decisionStatus(r) { const st = effectiveStaff(r); if (st && st.decision) return st.decision === "followup" ? "review" : st.decision; return verdict(r); }
 function timeAgo(s) { const d = new Date(s); if (isNaN(d)) return s; const diff = (Date.now() - d.getTime()) / 1000; if (diff < 60) return "just now"; if (diff < 3600) return Math.floor(diff / 60) + "m ago"; if (diff < 86400) return Math.floor(diff / 3600) + "h ago"; if (diff < 604800) return Math.floor(diff / 86400) + "d ago"; return d.toLocaleDateString(); }
 async function saveDecision(id, decision, note) {
-  const local = () => { const staff = { decision, note, decided_at: new Date().toISOString() }; setDemoDecision(id, staff); refreshAll(); };
+  // After any save, re-render the open panel directly (the mid-edit guard in
+  // refreshAll would otherwise treat the just-saved note as an unsaved draft).
+  const rerender = () => { const row = DATA.find((r) => r.id === id); if (row && activeId === id) renderDetail(row); refreshAll(); };
+  const local = () => { const staff = { decision, note, decided_at: new Date().toISOString() }; setDemoDecision(id, staff); rerender(); };
+  const saveFailed = (msg) => { const ds = $("decStatus"); if (ds) ds.textContent = "Could not save: " + msg; };
   let res;
   try { res = await fetch("/api/decision", { method: "POST", headers: { "Content-Type": "application/json", "x-dashboard-key": KEY }, body: JSON.stringify({ id, decision, note }) }); }
-  catch (e) { return local(); }
+  catch (e) { return IS_LOCAL ? local() : saveFailed("connection problem — try again."); }
   if (!res.ok) {
     let j = null; try { j = await res.json(); } catch (e) {}
-    if (j && j.error) { const ds = $("decStatus"); if (ds) ds.textContent = "Could not save: " + j.error; return; }
-    return local();
+    if (j && j.error) return saveFailed(cleanErr(j.error));
+    return IS_LOCAL ? local() : saveFailed("server error " + res.status + " — try again.");
   }
   const j = await res.json(); const row = DATA.find((r) => r.id === id); if (row) row.staff = j.staff;
-  refreshAll();
+  rerender();
 }
 
 function setLoginError(msg) { const el = $("loginErr"); el.textContent = msg; el.classList.add("show"); $("login").style.display = "grid"; }
+// Strip any HTML out of server errors (a paused database returns a full error page)
+// and translate the common "database asleep" case into plain English.
+function cleanErr(m) {
+  const t = String(m == null ? "" : m).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (/web server is down|error code 521|waking|unreachable/i.test(t)) return "The database is waking up — wait about a minute, then try again.";
+  return t.slice(0, 160);
+}
 function enterDemo() {
   if (!window.DEMO || KEY !== window.DEMO.PW) return setLoginError("Incorrect password.");
   DATA = [...window.DEMO.getLocal(), ...window.DEMO.samples];
@@ -235,20 +246,58 @@ function enterDemo() {
   $("login").style.display = "none";
   refreshAll();
 }
-async function load() {
-  let res;
-  try { res = await fetch("/api/submissions", { headers: { "x-dashboard-key": KEY } }); }
-  catch (e) { return enterDemo(); }
-  if (res.status === 401) return setLoginError("Incorrect password.");
-  if (!res.ok) {
-    let j = null; try { j = await res.json(); } catch (e) {}
-    if (j && j.error) return setLoginError("Server error " + res.status + " — " + j.error + ". Check the Vercel env vars.");
-    return enterDemo();
-  }
-  const j = await res.json();
-  DATA = j.submissions || [];
-  $("login").style.display = "none";
-  refreshAll();
+// --- live updates: poll for new submissions while the tab is open ---
+const POLL_MS = 15000;
+// Demo mode (sample data) is only for opening the file locally — a deployed
+// dashboard must never silently swap real applications for samples.
+const IS_LOCAL = location.protocol === "file:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+let pollTimer = null;
+let loadingNow = false;   // overlap guard: never let two loads race
+let liveLoaded = false;   // true once real data has been shown
+function startPolling() { if (!pollTimer) pollTimer = setInterval(() => { if (KEY && document.visibilityState === "visible") load(true); }, POLL_MS); }
+function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+// True while the operator is mid-edit on the open application (typed note or
+// picked a decision since it was rendered) — a refresh must not wipe that work.
+let renderedBaseline = null; // { note, decision } as last rendered into the panel
+function detailBusy() {
+  if (!renderedBaseline) return false;
+  const note = $("decNote");
+  if (note && note.value !== renderedBaseline.note) return true;
+  if (selectedDecision !== renderedBaseline.decision) return true;
+  const panel = $("panel");
+  return !!(panel && document.activeElement && panel.contains(document.activeElement));
+}
+// Fingerprint of what the detail pane shows — photo_urls are excluded because
+// every poll re-signs them; re-rendering on that alone re-downloads all photos.
+let lastDetailKey = null;
+function detailKey(r) { return JSON.stringify([r.id, effectiveStaff(r), r.rule_total, r.ai_score, r.recommendation]); }
+async function load(silent) {
+  if (loadingNow) return;
+  loadingNow = true;
+  try {
+    let res;
+    try { res = await fetch("/api/submissions", { headers: { "x-dashboard-key": KEY } }); }
+    catch (e) {
+      if (silent || liveLoaded) return; // keep current data; next poll retries
+      if (IS_LOCAL) return enterDemo();
+      return setLoginError("Can't reach the server — check your connection and try again.");
+    }
+    if (res.status === 401) { stopPolling(); return setLoginError("Incorrect password."); }
+    if (!res.ok) {
+      if (silent || liveLoaded) return; // transient server hiccup — keep showing current data
+      let j = null; try { j = await res.json(); } catch (e) {}
+      if (j && j.error) return setLoginError("Server error " + res.status + " — " + cleanErr(j.error));
+      if (IS_LOCAL) return enterDemo();
+      return setLoginError("Server error " + res.status + " — try again in a minute.");
+    }
+    const j = await res.json();
+    DATA = j.submissions || [];
+    liveLoaded = true;
+    $("login").style.display = "none";
+    $("demoBanner").style.display = "none";
+    startPolling();
+    refreshAll();
+  } finally { loadingNow = false; }
 }
 
 function refreshAll() {
@@ -256,10 +305,15 @@ function refreshAll() {
   const c = { all: DATA.length, review: 0, approve: 0, decline: 0 };
   DATA.forEach((r) => { const v = decisionStatus(r); if (c[v] != null) c[v]++; });
   $("s-all").textContent = c.all; $("s-review").textContent = c.review; $("s-approve").textContent = c.approve; $("s-decline").textContent = c.decline;
-  $("count").textContent = DATA.length + " total";
+  $("count").textContent = DATA.length + " total" + (pollTimer ? " · live" : "");
   document.querySelectorAll(".stat").forEach((s) => s.classList.toggle("active", s.getAttribute("data-filter") === filter));
   renderList();
-  if (activeId) { const row = DATA.find((r) => r.id === activeId); if (row) renderDetail(row); }
+  if (activeId) {
+    const row = DATA.find((r) => r.id === activeId);
+    // Re-render the open application only when its content actually changed and
+    // the operator isn't mid-edit — avoids photo flicker and draft-note wipes.
+    if (row && detailKey(row) !== lastDetailKey && !detailBusy()) renderDetail(row);
+  }
 }
 
 function visibleRows() {
@@ -367,8 +421,7 @@ function renderDetail(r) {
     ["License", `${esc(d.licClass)} · ${esc(d.licStatus)} · exp ${esc(d.licExp)}`],
     ["Driving", `${d.violations} violations · ${d.accidents} at-fault · ${d.dui} DUI${d.priorSusp ? " · prior suspension" : ""}${d.reckless ? " · reckless" : ""}`],
     ["Insurance", d.hasIns === "yes" ? `${esc(d.insProvider || "—")} ••${esc(d.insPolicy || "----")}${d.insExp ? " · exp " + esc(d.insExp) : ""}` : "No personal policy"],
-    ["Rental history", d.rentedBefore === "yes" ? `${d.lateReturns} late · ${d.damageClaims} damage · ${d.smoking} smoking · ${d.chargebacks} chargebacks${d.commIssues ? " · comm issue" : ""}` : "First-time renter"],
-    ["References", d.refsAvailable ? "Available" : "Not offered"],
+    ["Rental history", d.rentedBefore === "yes" ? "Has rented before" : "First-time renter"],
   ].map(([k, val]) => `<tr><td class="k">${k}</td><td>${val}</td></tr>`).join("");
 
   const st0 = effectiveStaff(r) || {};
@@ -397,17 +450,20 @@ function renderDetail(r) {
     <div class="sec"><h3>Uploaded documents</h3><div class="docrow">${photos || "<span style='color:var(--muted);font-size:13px'>No photos on file.</span>"}</div></div>
     <div class="sec"><h3>Submitted details</h3><table class="kv">${kv}</table></div>`;
   selectedDecision = cur0;
+  renderedBaseline = { note: st0.note || "", decision: cur0 };
+  lastDetailKey = detailKey(r);
   p.querySelectorAll(".dbtn").forEach((b) => b.addEventListener("click", () => { selectedDecision = b.getAttribute("data-dec"); p.querySelectorAll(".dbtn").forEach((x) => x.classList.toggle("active", x === b)); }));
   const sd = $("saveDec"); if (sd) sd.addEventListener("click", () => saveDecision(r.id, selectedDecision, $("decNote") ? $("decNote").value : ""));
   const pb = $("printBtn"); if (pb) pb.addEventListener("click", () => window.print());
   const bb = $("backBtn"); if (bb) bb.addEventListener("click", () => $("layout").classList.remove("showdetail"));
 }
 
-function logout() { sessionStorage.removeItem("vetkey"); KEY = ""; $("login").style.display = "grid"; $("pw").value = ""; $("pw").focus(); }
+function logout() { stopPolling(); sessionStorage.removeItem("vetkey"); KEY = ""; $("login").style.display = "grid"; $("pw").value = ""; $("pw").focus(); }
 $("loginBtn").addEventListener("click", () => { KEY = $("pw").value.trim(); sessionStorage.setItem("vetkey", KEY); $("loginErr").classList.remove("show"); load(); });
 $("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("loginBtn").click(); });
-$("refresh").addEventListener("click", load);
+$("refresh").addEventListener("click", () => load());
 $("logout").addEventListener("click", logout);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && KEY && pollTimer) load(true); });
 document.querySelectorAll(".stat").forEach((s) => s.addEventListener("click", () => { filter = s.getAttribute("data-filter"); refreshAll(); }));
 $("search").addEventListener("input", (e) => { search = e.target.value.trim(); renderList(); });
 $("sort").addEventListener("change", (e) => { sortKey = e.target.value; renderList(); });

@@ -74,7 +74,11 @@ export default async function handler(req, res) {
   };
 
   const { error: insertErr } = await supabase.from("vetting_submissions").insert(row);
-  if (insertErr) return res.status(500).json({ error: "Could not save submission", detail: insertErr.message });
+  if (insertErr) {
+    // This endpoint is public — log the real error, return a generic message.
+    console.error("submit insert failed:", insertErr.message);
+    return res.status(500).json({ error: "Could not save your application — please try again in a minute." });
+  }
 
   return res.status(200).json({ ok: true });
 }
