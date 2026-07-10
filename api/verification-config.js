@@ -3,7 +3,7 @@
 // Only ever exposes public keys — never secrets. With no keys configured,
 // both providers report disabled and the form stays as-is.
 
-import { vouchedEnabled, plaidEnabled, plaidEnv } from "../lib/verification.js";
+import { vouchedEnabled, plaidEnabled, plaidEnv, stripeEnabled } from "../lib/verification.js";
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -19,6 +19,10 @@ export default async function handler(req, res) {
     plaid: {
       enabled: plaidEnabled(),
       env: plaidEnv(),
+    },
+    stripe: {
+      enabled: stripeEnabled(),
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || null,
     },
   });
 }

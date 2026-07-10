@@ -153,6 +153,14 @@
         <div id="vouchedMount" style="margin-top:12px"></div>
       </div>
 
+      <!-- Instant ID verification (Stripe Identity) — hidden unless the server reports it configured -->
+      <div id="stripeIdBox" style="display:none;border:1px solid var(--border);border-radius:7px;padding:14px;margin-bottom:14px;background:#f5f8ff">
+        <div style="font-weight:600;font-size:13.5px">Instant ID check <span class="opt">(fastest)</span></div>
+        <div style="font-size:13px;color:var(--muted);margin:4px 0 10px">Verify your license and a quick selfie with your camera — takes about a minute. If you'd rather not, just upload the photos below instead.</div>
+        <button type="button" class="btn" id="stripeIdStart" style="padding:9px 16px;font-size:13.5px">Start ID verification</button>
+        <div id="stripeIdStatus" style="display:none;font-size:13px;font-weight:600;color:var(--ok);margin-top:8px">✓ ID check submitted</div>
+      </div>
+
       <div class="uploads">
         <label class="drop" id="dropFront"><div class="ttl">License — front</div><div class="desc">Tap to upload</div><img class="thumb" alt="" /><input type="file" accept="image/*" id="fileFront" /></label>
         <label class="drop" id="dropBack"><div class="ttl">License — back</div><div class="desc">Tap to upload</div><img class="thumb" alt="" /><input type="file" accept="image/*" id="fileBack" /></label>
@@ -257,7 +265,7 @@
 const $ = (id) => document.getElementById(id);
 const uploads = { front: null, back: null, selfie: null, insurance: null };
 // Third-party verification state (Vouched ID check / Plaid bank link).
-const VERIF = { vouchedJobId: null, vouchedJobToken: null, plaidPublicToken: null, plaidInstitution: null };
+const VERIF = { vouchedJobId: null, vouchedJobToken: null, plaidPublicToken: null, plaidInstitution: null, stripeVerificationSessionId: null };
 
 function downscale(file, maxEdge = 1400, quality = 0.82) {
   return new Promise((resolve, reject) => {
@@ -323,7 +331,7 @@ function validate() {
   if (!$("licExp").value) { showErr("licExp", true); errs.push("licExp"); }
   if (!$("licStatus").value) { showErr("licStatus", true); errs.push("licStatus"); }
   // Manual photos are required unless the renter completed the instant ID check.
-  if (!VERIF.vouchedJobId && (!uploads.front || !uploads.back || !uploads.selfie)) { showErr("uploads", true); errs.push("uploads"); }
+  if (!VERIF.vouchedJobId && !VERIF.stripeVerificationSessionId && (!uploads.front || !uploads.back || !uploads.selfie)) { showErr("uploads", true); errs.push("uploads"); }
   if (!$("consent").checked) { showErr("consent", true); errs.push("consent"); }
   if (!document.querySelector('input[name="hasIns"]:checked')) { showErr("hasIns", true); errs.push("hasIns"); }
   if (!document.querySelector('input[name="rentedBefore"]:checked')) { showErr("rentedBefore", true); errs.push("rentedBefore"); }
@@ -347,7 +355,7 @@ function updateProgress() {
   document.querySelectorAll('#app input[type="radio"]').forEach((r) => { radios[r.name] = radios[r.name] || { any: false, n: 0 }; radios[r.name].n++; if (r.checked) radios[r.name].any = true; });
   Object.values(radios).forEach((g) => { total -= g.n; total += 1; }); // each group = 1 field
   // required uploads as one field (a successful instant ID check counts too)
-  total += 1; if ((uploads.front && uploads.back && uploads.selfie) || VERIF.vouchedJobId) filled += 1;
+  total += 1; if ((uploads.front && uploads.back && uploads.selfie) || VERIF.vouchedJobId || VERIF.stripeVerificationSessionId) filled += 1;
   const pct = total ? Math.min(100, Math.round((filled / total) * 100)) : 0;
   $("pbar").style.width = pct + "%"; $("pct").textContent = pct;
 }
@@ -377,6 +385,7 @@ function gather() {
     photos: { front: uploads.front, back: uploads.back, selfie: uploads.selfie, insurance: uploads.insurance },
     vouchedJobId: VERIF.vouchedJobId, vouchedJobToken: VERIF.vouchedJobToken,
     plaidPublicToken: VERIF.plaidPublicToken, plaidInstitution: VERIF.plaidInstitution,
+    stripeVerificationSessionId: VERIF.stripeVerificationSessionId,
   };
 }
 function finishSubmit() {
@@ -506,13 +515,53 @@ function wirePlaid() {
   });
 }
 
+function wireStripeIdentity(cfg) {
+  $("stripeIdBox").style.display = "block";
+  $("stripeIdStart").addEventListener("click", async () => {
+    const btn = $("stripeIdStart");
+    btn.disabled = true; btn.textContent = "Loading…";
+    try {
+      if (!window.Stripe) await loadScript("https://js.stripe.com/v3/");
+      const res = await fetch("/api/stripe-verification-session", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: $("email").value.trim() }),
+      });
+      const j = await res.json();
+      if (!res.ok || !j.client_secret || !j.id) throw new Error(j.error || "could not start");
+      const stripe = window.Stripe(cfg.publishableKey);
+      const { error } = await stripe.verifyIdentity(j.client_secret);
+      const st = $("stripeIdStatus");
+      if (error) {
+        // The user cancelled/declined or the device is unsupported — fall back
+        // to manual uploads. (No error only means "document submitted".)
+        VERIF.stripeVerificationSessionId = null;
+        btn.disabled = false; btn.textContent = "Retry ID verification";
+        st.style.display = "block"; st.style.color = "var(--bad)";
+        st.textContent = "The instant check didn't complete — try again or upload your photos below.";
+      } else {
+        VERIF.stripeVerificationSessionId = j.id;
+        st.style.display = "block"; st.style.color = "var(--ok)";
+        st.textContent = "✓ ID check submitted";
+        btn.style.display = "none";
+        showErr("uploads", false);
+      }
+      updateProgress();
+    } catch (e) {
+      btn.disabled = false; btn.textContent = "Start ID verification";
+      alert("The instant ID check couldn't start — please upload your photos below instead.");
+    }
+  });
+}
+
 (async () => {
   let cfg = null;
   try {
     const res = await fetch("/api/verification-config");
     if (res.ok) cfg = await res.json();
-  } catch (e) { /* no backend (local/demo) — leave both hidden */ }
-  if (cfg && cfg.vouched && cfg.vouched.enabled && cfg.vouched.publicKey) wireVouched(cfg.vouched);
+  } catch (e) { /* no backend (local/demo) — leave all hidden */ }
+  // Stripe Identity and Vouched do the same ID check — only show one (prefer Stripe).
+  if (cfg && cfg.stripe && cfg.stripe.enabled && cfg.stripe.publishableKey) wireStripeIdentity(cfg.stripe);
+  else if (cfg && cfg.vouched && cfg.vouched.enabled && cfg.vouched.publicKey) wireVouched(cfg.vouched);
   if (cfg && cfg.plaid && cfg.plaid.enabled) wirePlaid();
 })();
 </script>

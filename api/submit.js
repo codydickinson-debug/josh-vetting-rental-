@@ -9,7 +9,7 @@ import { randomUUID } from "node:crypto";
 import { getAdminClient, PHOTO_BUCKET } from "../lib/db.js";
 import { normalize, assess } from "../lib/scoring.js";
 import { runAIAssessment } from "../lib/ai.js";
-import { fetchVouchedJob, fetchPlaidSummary, vouchedEnabled, plaidEnabled } from "../lib/verification.js";
+import { fetchVouchedJob, fetchPlaidSummary, fetchStripeVerification, vouchedEnabled, plaidEnabled, stripeEnabled } from "../lib/verification.js";
 
 function dataUrlToBuffer(dataUrl) {
   const m = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/.exec(dataUrl || "");
@@ -71,6 +71,9 @@ export default async function handler(req, res) {
     if (verification.plaid && !verification.plaid.error && body.plaidInstitution) {
       verification.plaid.institution = String(body.plaidInstitution).slice(0, 120);
     }
+  }
+  if (body.stripeVerificationSessionId && stripeEnabled()) {
+    verification.stripe = await fetchStripeVerification(String(body.stripeVerificationSessionId).slice(0, 128), applicantName);
   }
 
   // --- AI assessment (sees the photos via the original data URLs) ---
