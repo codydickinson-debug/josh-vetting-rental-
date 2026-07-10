@@ -434,7 +434,7 @@ function renderDetail(r) {
   // only present on submissions where the renter used those steps.
   let verifSec = "";
   const vf = r.verification || {};
-  if (vf.vouched || vf.plaid) {
+  if (vf.vouched || vf.plaid || vf.stripe) {
     let inner = "";
     if (vf.vouched) {
       const vo = vf.vouched;
@@ -468,6 +468,24 @@ function renderDetail(r) {
           <div class="vbadge"><div class="vt">Account holder matches applicant</div><div class="vv"><span class="dot ${pl.nameMatch ? "g" : "r"}"></span>${pl.nameMatch ? "Match" : "No match"}</div></div>
         </div>
         <div style="font-size:13px;margin-top:6px"><span style="color:var(--muted)">Holders:</span> ${esc((pl.ownerNames || []).join(", ") || "—")}${accts ? ` <span style="color:var(--muted)">· Accounts:</span> ${esc(accts)}` : ""}</div>`;
+      }
+    }
+    if (vf.stripe) {
+      const stx = vf.stripe;
+      if (stx.error) {
+        inner += `<div class="aierr" style="margin-top:10px">Stripe ID check — ${esc(stx.error)}</div>`;
+      } else {
+        const ok = stx.verified === true;
+        const label = ok ? "Verified"
+          : stx.status === "processing" ? "Submitted — processing"
+          : stx.success && stx.nameMatch === false ? "ID passed — name mismatch"
+          : "Not verified";
+        inner += `<div class="vbadges" style="margin-top:10px">
+          <div class="vbadge"><div class="vt">Stripe Identity — ID verification</div><div class="vv"><span class="dot ${ok ? "g" : "r"}"></span>${esc(label)}${stx.status ? " · " + esc(stx.status) : ""}</div></div>
+          <div class="vbadge"><div class="vt">Name on ID</div><div class="vv">${esc([stx.firstName, stx.lastName].filter(Boolean).join(" ") || "—")}</div></div>
+        </div>`;
+        if (stx.nameMatch === false) inner += `<div class="mismatch-row"><span>⚠</span> The name on the verified ID does not match this applicant — possible replayed/borrowed verification.</div>`;
+        if (stx.lastError) inner += `<div class="mismatch-row"><span>⚠</span> ${esc(stx.lastError)}</div>`;
       }
     }
     verifSec = `<div class="sec"><h3>Third-party verifications</h3>${inner}</div>`;
