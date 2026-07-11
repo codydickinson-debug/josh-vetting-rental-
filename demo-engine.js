@@ -111,25 +111,25 @@
     const name = p.firstName || "This applicant";
     const strengths = [], concerns = [], credibility = [];
 
-    if (p.yearsAddr >= 3) strengths.push(`${p.yearsAddr} years at the current address signals stability.`);
-    if (p.hasIns === "yes" && p.insGood && p.insListed && p.insLimits) strengths.push("Active insurance with all coverage checks confirmed.");
-    if (p.violations === 0 && p.accidents === 0 && p.dui === 0) strengths.push("Clean self-reported driving record.");
-    if (p.refsAvailable) strengths.push("Offered references proactively.");
-    if (p.rentedBefore === "no") strengths.push("First-time renter with no negative history.");
-    if (!strengths.length) strengths.push("Application was completed in full.");
+    if (p.yearsAddr >= 3) strengths.push(`Has lived at the same address for ${p.yearsAddr} years.`);
+    if (p.hasIns === "yes" && p.insGood && p.insListed && p.insLimits) strengths.push("Has active car insurance, and all the checks passed.");
+    if (p.violations === 0 && p.accidents === 0 && p.dui === 0) strengths.push("Says they have a clean driving record.");
+    if (p.refsAvailable) strengths.push("Offered references without being asked.");
+    if (p.rentedBefore === "no") strengths.push("First-time renter with no bad history.");
+    if (!strengths.length) strengths.push("Filled out the whole application.");
 
-    if (p.dui > 0) concerns.push(`${p.dui} DUI/DWI on record — a significant liability flag.`);
-    if (p.accidents >= 2) concerns.push(`${p.accidents} at-fault accidents in three years.`);
-    if (p.licStatus === "suspended" || p.licStatus === "revoked") concerns.push(`License is ${p.licStatus} — cannot legally drive.`);
-    if (p.chargebacks > 0) concerns.push(`${p.chargebacks} prior payment chargeback(s).`);
-    if (p.hasIns === "no") concerns.push("No personal insurance policy on file.");
-    concerns.push("Self-reported driving history not yet cross-checked against the official MVR.");
+    if (p.dui > 0) concerns.push(`Has ${p.dui} drunk-driving charge(s) — a big red flag.`);
+    if (p.accidents >= 2) concerns.push(`Caused ${p.accidents} crashes in the last 3 years.`);
+    if (p.licStatus === "suspended" || p.licStatus === "revoked") concerns.push(`Their license is ${p.licStatus} — they can't legally drive.`);
+    if (p.chargebacks > 0) concerns.push(`Took back ${p.chargebacks} past payment(s).`);
+    if (p.hasIns === "no") concerns.push("Has no car insurance of their own.");
+    concerns.push("Their driving record has not been double-checked yet.");
 
     // identity cross-check
     const idMatch = p.nameMatch;
-    if (!idMatch) credibility.push("Applicant did not confirm the name/DOB matches the license — possible mismatch.");
-    if ((p.email.split("@")[1] || "").match(/mailinator|guerrilla|tempmail|trashmail|yopmail/)) credibility.push("Disposable / throwaway email address.");
-    if (!/\d/.test(p.address)) credibility.push("Address looks incomplete (no street number).");
+    if (!idMatch) credibility.push("They didn't confirm the name and birth date match the license.");
+    if ((p.email.split("@")[1] || "").match(/mailinator|guerrilla|tempmail|trashmail|yopmail/)) credibility.push("Used a throwaway email address.");
+    if (!/\d/.test(p.address)) credibility.push("The address looks incomplete (no house number).");
     const identity_check = {
       verdict: idMatch ? "match" : "mismatch",
       extracted: {
@@ -139,27 +139,27 @@
         expiration_date: p.licExp || "not legible",
         address: p.address || "not legible",
       },
-      mismatches: idMatch ? [] : ["Name / DOB on the license could not be confirmed against the application — verify in person."],
+      mismatches: idMatch ? [] : ["The name or birth date on the license couldn't be confirmed — check in person."],
     };
 
     // fake-ID screen
     const authFlags = [];
-    if (p.licStatus === "expired") authFlags.push("License is reported expired.");
-    if (p.licStatus === "suspended" || p.licStatus === "revoked") authFlags.push(`License status is ${p.licStatus}.`);
-    if (!idMatch) authFlags.push("Selfie-to-ID match not confirmed; photo substitution can't be ruled out.");
+    if (p.licStatus === "expired") authFlags.push("They said their license is expired.");
+    if (p.licStatus === "suspended" || p.licStatus === "revoked") authFlags.push(`Their license is ${p.licStatus}.`);
+    if (!idMatch) authFlags.push("The selfie may not match the photo on the ID.");
     const authVerdict = !idMatch ? "suspicious" : (p.licStatus !== "valid" ? "suspicious" : "appears_genuine");
-    const document_authenticity = { verdict: authVerdict, flags: authFlags.length ? authFlags : ["No obvious signs of tampering in the demo sample."] };
+    const document_authenticity = { verdict: authVerdict, flags: authFlags.length ? authFlags : ["Nothing looks changed or fake in this sample."] };
 
     // insurance review
     let insurance_check;
-    if (p.hasIns !== "yes") insurance_check = { status: "no_document", notes: "Applicant reports no personal policy — route to the in-house protection plan." };
-    else if (hasInsDoc) insurance_check = { status: "document_reviewed", notes: `Insurance card on file. Named insured appears to match ${name}; ${p.insProvider || "carrier"} policy ${p.insExp ? "valid through " + p.insExp : "current"}.` };
-    else insurance_check = { status: "self_reported_only", notes: "Insurance is self-reported — no card uploaded. Request the declaration page before handing over keys." };
+    if (p.hasIns !== "yes") insurance_check = { status: "no_document", notes: "They have no car insurance of their own — offer the protection plan." };
+    else if (hasInsDoc) insurance_check = { status: "document_reviewed", notes: `Insurance card is on file and the name matches ${name}. ${p.insProvider || "The insurer"} policy is ${p.insExp ? "good through " + p.insExp : "current"}.` };
+    else insurance_check = { status: "self_reported_only", notes: "They said they have insurance but didn't send a card. Ask for proof before giving them the keys." };
 
     const lead = {
-      approve: `${name} presents as a low-risk, dependable applicant. The ID is consistent with the application and the profile is clean across the major categories.`,
-      review: `${name} is a borderline case worth a human look. There are positives, but at least one item below — documentation or history — keeps this out of automatic approval.`,
-      decline: `${name} carries risk factors outside the comfortable range. The identity, document, or history concerns below are material and warrant a decline or an in-person conversation.`,
+      approve: `${name} looks like a safe renter. The ID matches what they wrote, and everything checks out.`,
+      review: `${name} is a "maybe" — a person should take a look. There are good signs, but at least one thing below needs a closer look.`,
+      decline: `${name} has some big risks. The problems below are serious — it's best to say no, or talk to them in person first.`,
     }[r.verdict];
 
     const aiScore = clamp(r.total + (r.verdict === "review" ? 3 : 0) + (!idMatch ? 8 : 0), 0, 100);

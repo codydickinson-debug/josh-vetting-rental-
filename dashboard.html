@@ -164,8 +164,8 @@
   <div class="box">
     <div class="mark">RV</div>
     <h2>Vetting Dashboard</h2>
-    <p>Enter the staff password to view applications.</p>
-    <div class="err" id="loginErr">Incorrect password.</div>
+    <p>Type your password to see the applications.</p>
+    <div class="err" id="loginErr">Wrong password.</div>
     <input type="password" id="pw" placeholder="Staff password" autocomplete="current-password" />
     <button id="loginBtn">Unlock</button>
   </div>
@@ -196,7 +196,7 @@
 
 <div class="layout" id="layout">
   <div class="list"><div class="listhead"><span>Applications</span><span id="listcount"></span></div><div id="items"></div></div>
-  <div class="detail"><div class="empty" id="empty">Select an application to view details.</div><div class="panel" id="panel" style="display:none"></div></div>
+  <div class="detail"><div class="empty" id="empty">Pick a renter to see the details.</div><div class="panel" id="panel" style="display:none"></div></div>
 </div>
 
 <script src="demo-engine.js"></script>
@@ -246,7 +246,7 @@ function cleanErr(m) {
   return t.slice(0, 160);
 }
 function enterDemo() {
-  if (!window.DEMO || KEY !== window.DEMO.PW) return setLoginError("Incorrect password.");
+  if (!window.DEMO || KEY !== window.DEMO.PW) return setLoginError("Wrong password.");
   DATA = [...window.DEMO.getLocal(), ...window.DEMO.samples];
   $("demoBanner").style.display = "block";
   $("login").style.display = "none";
@@ -288,7 +288,7 @@ async function load(silent) {
       if (IS_LOCAL) return enterDemo();
       return setLoginError("Can't reach the server — check your connection and try again.");
     }
-    if (res.status === 401) { stopPolling(); return setLoginError("Incorrect password."); }
+    if (res.status === 401) { stopPolling(); return setLoginError("Wrong password."); }
     if (!res.ok) {
       if (silent || liveLoaded) return; // transient server hiccup — keep showing current data
       let j = null; try { j = await res.json(); } catch (e) {}
@@ -341,7 +341,7 @@ function renderList() {
     const veh = (r.data && r.data.vehicle) || "";
     return `<div class="item${r.id === activeId ? " active" : ""}" data-id="${r.id}">
       <div class="r1"><span class="nm">${esc(r.applicant_name || "Unknown")}${flagged ? '<span class="warn" title="ID mismatch or suspicious document">⚠</span>' : ""}</span><span class="pill ${v}">${v}</span></div>
-      <div class="when">${esc(timeAgo(r.created_at))} · rule ${r.rule_total ?? "—"}${r.ai_score != null ? " · AI " + r.ai_score : ""}${st ? ' · <span class="decided">✓ ' + esc(DLABEL[st.decision] || st.decision || "") + "</span>" : ""}</div>
+      <div class="when">${esc(timeAgo(r.created_at))} · risk ${r.rule_total ?? "—"}${r.ai_score != null ? " · AI " + r.ai_score : ""}${st ? ' · <span class="decided">✓ ' + esc(DLABEL[st.decision] || st.decision || "") + "</span>" : ""}</div>
       ${veh ? `<div class="veh">${esc(veh)}</div>` : ""}
     </div>`;
   }).join("") || `<div class="empty-list">No applications match.</div>`;
@@ -355,7 +355,7 @@ function renderList() {
 
 const VTEXT = {
   identity: { match: ["g", "Matches ID"], partial_match: ["y", "Partial match"], mismatch: ["r", "Mismatch"], unreadable: ["n", "Unreadable"] },
-  doc: { appears_genuine: ["g", "Appears genuine"], suspicious: ["y", "Suspicious"], likely_fake: ["r", "Likely fake"], cannot_determine: ["n", "Can't determine"] },
+  doc: { appears_genuine: ["g", "Looks real"], suspicious: ["y", "Looks off"], likely_fake: ["r", "Looks fake"], cannot_determine: ["n", "Not sure"] },
   ins: { document_reviewed: ["g", "Card reviewed"], self_reported_only: ["y", "Self-reported"], possibly_expired: ["y", "Possibly expired"], name_mismatch: ["r", "Name mismatch"], unreadable: ["n", "Unreadable"], no_document: ["n", "No document"] },
 };
 function vbadge(title, map, key) {
@@ -371,7 +371,7 @@ function renderDetail(r) {
   const ic = ai.identity_check || {}, da = ai.document_authenticity || {}, inc = ai.insurance_check || {};
   const ex = ic.extracted || {};
 
-  const cats = [{ key: "mvr", name: "Driving (MVR)" }, { key: "fraud", name: "Fraud" }, { key: "insurance", name: "Insurance" }, { key: "rental", name: "Rental History" }];
+  const cats = [{ key: "mvr", name: "Driving record" }, { key: "fraud", name: "Honesty check" }, { key: "insurance", name: "Insurance" }, { key: "rental", name: "Rental history" }];
   const catHtml = cats.map((c) => {
     const cat = (s.categories && s.categories[c.key]) || { points: 0, cap: 0, lines: [] };
     const pct = cat.cap ? Math.round((cat.points / cat.cap) * 100) : 0;
@@ -395,33 +395,35 @@ function renderDetail(r) {
       <tr><td class="k">Expires</td><td>${esc(ex.expiration_date || "—")}</td></tr>
       <tr><td class="k">Address on ID</td><td>${esc(ex.address || "—")}</td></tr>
     </table>` + mism.map((m) => `<div class="mismatch-row"><span>⚠</span> ${esc(m)}</div>`).join("");
-    const credHtml = (ai.credibility_flags || []).length ? `<ul class="credlist">${ai.credibility_flags.map((x) => `<li><span>⚠</span> ${esc(x)}</li>`).join("")}</ul>` : `<div style="font-size:13px;color:var(--muted);margin-top:6px">No misrepresentation signals detected.</div>`;
-    aiBlock = `<div class="ai-lead">${esc(ai.summary || "")}</div>
-      <div class="vbadges">
-        ${vbadge("Identity vs ID", VTEXT.identity, ic.verdict)}
-        ${vbadge("Document (fake-ID screen)", VTEXT.doc, da.verdict)}
-        ${vbadge("Insurance", VTEXT.ins, inc.status)}
+    const credHtml = (ai.credibility_flags || []).length ? `<ul class="credlist">${ai.credibility_flags.map((x) => `<li><span>⚠</span> ${esc(x)}</li>`).join("")}</ul>` : `<div style="font-size:13px;color:var(--muted);margin-top:6px">No signs of lying found.</div>`;
+    const pros = (ai.strengths || []).slice(0, 3);
+    const cons = (ai.concerns || []).slice(0, 3);
+    aiBlock = `<div class="ai-grid">
+        <div class="good"><h4>👍 Good things</h4><ul>${pros.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
+        <div class="bad"><h4>👎 Watch out for</h4><ul>${cons.map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
       </div>
-      <div class="ai-grid">
-        <div class="good"><h4>Strengths</h4><ul>${(ai.strengths || []).map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
-        <div class="bad"><h4>Concerns</h4><ul>${(ai.concerns || []).map((x) => `<li>${esc(x)}</li>`).join("") || "<li>—</li>"}</ul></div>
+      <div class="ai-lead">${esc(ai.summary || "")}</div>
+      <div class="vbadges">
+        ${vbadge("Does the ID match?", VTEXT.identity, ic.verdict)}
+        ${vbadge("Is the ID real?", VTEXT.doc, da.verdict)}
+        ${vbadge("Insurance", VTEXT.ins, inc.status)}
       </div>`;
-    aiBlock += `<h3 style="margin-top:18px">Identity read off the license</h3>${idTable}`;
-    aiBlock += `<h3 style="margin-top:18px">Document authenticity</h3>${(da.flags || []).length ? `<ul class="flaglist">${da.flags.map((f) => `<li class="${da.verdict === "appears_genuine" ? "good" : da.verdict === "likely_fake" ? "high" : "medium"}"><span>•</span> ${esc(f)}</li>`).join("")}</ul>` : "<div style='font-size:13px;color:var(--muted)'>No flags.</div>"}`;
-    aiBlock += `<h3 style="margin-top:18px">Insurance review</h3><div style="font-size:13.5px">${esc(inc.notes || "—")}</div>`;
-    aiBlock += `<h3 style="margin-top:18px">Possible misrepresentation</h3>${credHtml}`;
+    aiBlock += `<h3 style="margin-top:18px">What the ID says</h3>${idTable}`;
+    aiBlock += `<h3 style="margin-top:18px">Is the ID real?</h3>${(da.flags || []).length ? `<ul class="flaglist">${da.flags.map((f) => `<li class="${da.verdict === "appears_genuine" ? "good" : da.verdict === "likely_fake" ? "high" : "medium"}"><span>•</span> ${esc(f)}</li>`).join("")}</ul>` : "<div style='font-size:13px;color:var(--muted)'>Nothing looks off.</div>"}`;
+    aiBlock += `<h3 style="margin-top:18px">Insurance check</h3><div style="font-size:13.5px">${esc(inc.notes || "—")}</div>`;
+    aiBlock += `<h3 style="margin-top:18px">Signs of lying</h3>${credHtml}`;
     if (ai.document_notes) aiBlock += `<div class="notes">${esc(ai.document_notes)}</div>`;
   } else {
-    aiBlock = `<div class="aierr">AI assessment unavailable${ai && ai.error ? ": " + esc(ai.error) : ""}.</div>`;
+    aiBlock = `<div class="aierr">The AI check didn't run${ai && ai.error ? ": " + esc(ai.error) : ""}.</div>`;
   }
 
   const photos = ["front", "back", "selfie", "insurance"].map((k) => urls[k]
     ? `<figure><img src="${urls[k]}" alt="${k}" /><figcaption>${k === "front" ? "License — Front" : k === "back" ? "License — Back" : k === "selfie" ? "Selfie" : "Insurance"}</figcaption></figure>` : "").join("");
 
   const kv = [
-    ["Vehicle requested", esc(d.vehicle || "—")],
-    ["Rental dates", d.pickupDate ? `${esc(d.pickupDate)}${d.returnDate ? " → " + esc(d.returnDate) : ""}` : "—"],
-    ["Date of birth", `${esc(d.dob)}${d.age != null ? " (" + d.age + " yrs)" : ""}`],
+    ["Car they want", esc(d.vehicle || "—")],
+    ["Rental days", d.pickupDate ? `${esc(d.pickupDate)}${d.returnDate ? " → " + esc(d.returnDate) : ""}` : "—"],
+    ["Birth date", `${esc(d.dob)}${d.age != null ? " (" + d.age + " yrs)" : ""}`],
     ["Phone", esc(d.phone)], ["Email", esc(d.email)],
     ["Address", `${esc(d.address)} (${d.yearsAddr} yr)`],
     ["License", [d.licClass && esc(d.licClass), esc(d.licStatus), "exp " + esc(d.licExp)].filter(Boolean).join(" · ")],
@@ -488,7 +490,7 @@ function renderDetail(r) {
         if (stx.lastError) inner += `<div class="mismatch-row"><span>⚠</span> ${esc(stx.lastError)}</div>`;
       }
     }
-    verifSec = `<div class="sec"><h3>Third-party verifications</h3>${inner}</div>`;
+    verifSec = `<div class="sec"><h3>Outside checks</h3>${inner}</div>`;
   }
 
   const st0 = effectiveStaff(r) || {};
@@ -498,25 +500,25 @@ function renderDetail(r) {
     `<button class="dbtn${cur0 === "approve" ? " active" : ""}" data-dec="approve">Approve</button>` +
     `<button class="dbtn${cur0 === "followup" ? " active" : ""}" data-dec="followup">Follow-up</button>` +
     `<button class="dbtn${cur0 === "decline" ? " active" : ""}" data-dec="decline">Decline</button></div>` +
-    `<textarea id="decNote" placeholder="Internal notes (optional)…">${esc(st0.note || "")}</textarea>` +
+    `<textarea id="decNote" placeholder="Your notes (only you see these)…">${esc(st0.note || "")}</textarea>` +
     `<div class="dsave"><button id="saveDec">Save decision</button><span class="dstatus" id="decStatus">${st0.decided_at ? "Last saved " + esc(timeAgo(st0.decided_at)) : ""}</span></div></div>`;
   p.innerHTML = `
     <div class="toprow"><button class="back" id="backBtn">← All applications</button><button class="printbtn" id="printBtn">Print / Save PDF</button></div>
     <div class="dhead">
       <div><h2>${esc(r.applicant_name || "Unknown")}</h2><div class="meta">Submitted ${esc(fmtDate(r.created_at))} · ${esc(r.email || "")}</div>${d.vehicle ? `<div class="wants">Wants: <strong>${esc(d.vehicle)}</strong>${d.pickupDate ? " · " + esc(d.pickupDate) + (d.returnDate ? " → " + esc(d.returnDate) : "") : ""}</div>` : ""}</div>
       <div class="chips">
-        <div class="chip"><div class="n">${r.rule_total ?? "—"}</div><div class="l">Rule</div></div>
-        <div class="chip"><div class="n">${r.ai_score ?? "—"}</div><div class="l">AI risk</div></div>
-        <div class="chip"><div class="n" style="font-size:14px;padding-top:5px"><span class="pill ${v}">${v}</span></div><div class="l">Recommend</div></div>
+        <div class="chip"><div class="n">${r.rule_total ?? "—"}</div><div class="l">Rule score</div></div>
+        <div class="chip"><div class="n">${r.ai_score ?? "—"}</div><div class="l">AI score</div></div>
+        <div class="chip"><div class="n" style="font-size:14px;padding-top:5px"><span class="pill ${v}">${v}</span></div><div class="l">Suggestion</div></div>
       </div>
     </div>
     ${decisionSec}
     ${verifSec}
-    <div class="sec"><h3>AI Assessment${ai && ai.confidence ? ` · ${esc(ai.confidence)} confidence` : ""}</h3>${aiBlock}</div>
-    <div class="sec"><h3>Category points</h3>${catHtml}</div>
-    <div class="sec"><h3>Rule flags</h3><ul class="flaglist">${flagHtml}</ul></div>
-    <div class="sec"><h3>Uploaded documents</h3><div class="docrow">${photos || "<span style='color:var(--muted);font-size:13px'>No photos on file.</span>"}</div></div>
-    <div class="sec"><h3>Submitted details</h3><table class="kv">${kv}</table></div>`;
+    <div class="sec"><h3>What the AI thinks${ai && ai.confidence ? ` · how sure it is: ${esc(ai.confidence)}` : ""}</h3>${aiBlock}</div>
+    <div class="sec"><h3>Risk points by area</h3>${catHtml}</div>
+    <div class="sec"><h3>Warnings</h3><ul class="flaglist">${flagHtml}</ul></div>
+    <div class="sec"><h3>Photos they sent</h3><div class="docrow">${photos || "<span style='color:var(--muted);font-size:13px'>No photos on file.</span>"}</div></div>
+    <div class="sec"><h3>What they told us</h3><table class="kv">${kv}</table></div>`;
   selectedDecision = cur0;
   renderedBaseline = { note: st0.note || "", decision: cur0 };
   lastDetailKey = detailKey(r);

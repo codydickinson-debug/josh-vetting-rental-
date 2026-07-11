@@ -98,7 +98,7 @@
   <header class="top">
     <div class="eyebrow">Vehicle rental</div>
     <h1>Rental application</h1>
-    <p>Please complete all fields. Takes about 3 minutes. Your information is sent securely and reviewed by our team.</p>
+    <p>Fill in every box. It takes about 3 minutes. Your info is sent safely, and only our team sees it.</p>
     <div class="pbar"><i id="pbar"></i></div>
     <div class="pmeta"><span id="pct">0</span>% complete</div>
   </header>
@@ -108,32 +108,32 @@
     <!-- 1. APPLICANT -->
     <section class="card" data-step>
       <h2><span class="n">1</span> Your details</h2>
-      <p class="hint">How we reach you and confirm your identity.</p>
+      <p class="hint">How we reach you and check who you are.</p>
       <div class="grid">
         <div><label class="field" for="firstName">First name <span class="req">*</span></label>
-          <input type="text" id="firstName" autocomplete="given-name" /><div class="err" data-for="firstName">Required.</div></div>
+          <input type="text" id="firstName" autocomplete="given-name" /><div class="err" data-for="firstName">Please fill this in.</div></div>
         <div><label class="field" for="lastName">Last name <span class="req">*</span></label>
-          <input type="text" id="lastName" autocomplete="family-name" /><div class="err" data-for="lastName">Required.</div></div>
+          <input type="text" id="lastName" autocomplete="family-name" /><div class="err" data-for="lastName">Please fill this in.</div></div>
         <div><label class="field" for="dob">Date of birth <span class="req">*</span></label>
-          <input type="date" id="dob" /><div class="err" data-for="dob">Enter a valid date of birth.</div></div>
+          <input type="date" id="dob" /><div class="err" data-for="dob">Please enter your birth date.</div></div>
         <div><label class="field" for="phone">Phone <span class="req">*</span></label>
-          <input type="tel" id="phone" placeholder="(555) 123-4567" autocomplete="tel" /><div class="err" data-for="phone">Enter a valid 10-digit phone.</div></div>
+          <input type="tel" id="phone" placeholder="(555) 123-4567" autocomplete="tel" /><div class="err" data-for="phone">Please enter a 10-number phone.</div></div>
         <div><label class="field" for="email">Email <span class="req">*</span></label>
-          <input type="email" id="email" placeholder="you@email.com" autocomplete="email" /><div class="err" data-for="email">Enter a valid email.</div></div>
-        <div><label class="field" for="yearsAddr">Years at current address <span class="req">*</span></label>
-          <input type="number" id="yearsAddr" min="0" max="80" step="1" placeholder="0" /><div class="err" data-for="yearsAddr">Required.</div></div>
-        <div class="full"><label class="field" for="address">Current address <span class="req">*</span></label>
-          <input type="text" id="address" placeholder="Street, City, State ZIP" autocomplete="street-address" /><div class="err" data-for="address">Enter a full street address.</div></div>
+          <input type="email" id="email" placeholder="you@email.com" autocomplete="email" /><div class="err" data-for="email">Please enter a real email.</div></div>
+        <div><label class="field" for="yearsAddr">Years living here <span class="req">*</span></label>
+          <input type="number" id="yearsAddr" min="0" max="80" step="1" placeholder="0" /><div class="err" data-for="yearsAddr">Please fill this in.</div></div>
+        <div class="full"><label class="field" for="address">Home address <span class="req">*</span></label>
+          <input type="text" id="address" placeholder="Street, City, State ZIP" autocomplete="street-address" /><div class="err" data-for="address">Please type your full address.</div></div>
       </div>
     </section>
 
     <!-- 2. RENTAL REQUEST -->
     <section class="card" data-step>
-      <h2><span class="n">2</span> Rental request</h2>
-      <p class="hint">What you'd like to rent, and when.</p>
+      <h2><span class="n">2</span> What you want to rent</h2>
+      <p class="hint">Which car you want, and the days you need it.</p>
       <div class="grid">
-        <div class="full"><label class="field" for="vehicle">Vehicle you'd like to rent <span class="req">*</span></label>
-          <input type="text" id="vehicle" placeholder="e.g. 2024 Tesla Model 3" /><div class="err" data-for="vehicle">Required.</div></div>
+        <div class="full"><label class="field" for="vehicle">Which car do you want? <span class="req">*</span></label>
+          <input type="text" id="vehicle" placeholder="e.g. 2024 Tesla Model 3" /><div class="err" data-for="vehicle">Please fill this in.</div></div>
         <div><label class="field" for="pickupDate">Pickup date</label><input type="date" id="pickupDate" /></div>
         <div><label class="field" for="returnDate">Return date</label><input type="date" id="returnDate" /></div>
       </div>
@@ -142,23 +142,23 @@
     <!-- 3. ID -->
     <section class="card" data-step>
       <h2><span class="n">3</span> Driver's license</h2>
-      <p class="hint">Upload clear photos. The details on your license must match what you entered above — we check them.</p>
+      <p class="hint">Add clear photos. The info on your license must match what you typed above — we check it.</p>
 
       <!-- Instant ID verification (Vouched) — hidden unless the server reports it configured -->
       <div id="vouchedBox" style="display:none;border:1px solid var(--border);border-radius:7px;padding:14px;margin-bottom:14px;background:#f5f8ff">
-        <div style="font-weight:600;font-size:13.5px">Instant ID check <span class="opt">(fastest)</span></div>
-        <div style="font-size:13px;color:var(--muted);margin:4px 0 10px">Verify your license and a quick selfie with your camera — takes about a minute. If you'd rather not, just upload the photos below instead.</div>
-        <button type="button" class="btn" id="vouchedStart" style="padding:9px 16px;font-size:13.5px">Start ID verification</button>
+        <div style="font-weight:600;font-size:13.5px">Quick ID check <span class="opt">(fastest)</span></div>
+        <div style="font-size:13px;color:var(--muted);margin:4px 0 10px">Use your camera to scan your license and take a quick selfie. It takes about a minute. Or you can add photos below instead.</div>
+        <button type="button" class="btn" id="vouchedStart" style="padding:9px 16px;font-size:13.5px">Start ID check</button>
         <div id="vouchedStatus" style="display:none;font-size:13px;font-weight:600;color:var(--ok);margin-top:8px">✓ ID verified</div>
         <div id="vouchedMount" style="margin-top:12px"></div>
       </div>
 
       <!-- Instant ID verification (Stripe Identity) — hidden unless the server reports it configured -->
       <div id="stripeIdBox" style="display:none;border:1px solid var(--border);border-radius:7px;padding:14px;margin-bottom:14px;background:#f5f8ff">
-        <div style="font-weight:600;font-size:13.5px">Instant ID check <span class="opt">(fastest)</span></div>
-        <div style="font-size:13px;color:var(--muted);margin:4px 0 10px">Verify your license and a quick selfie with your camera — takes about a minute. If you'd rather not, just upload the photos below instead.</div>
-        <button type="button" class="btn" id="stripeIdStart" style="padding:9px 16px;font-size:13.5px">Start ID verification</button>
-        <div id="stripeIdStatus" style="display:none;font-size:13px;font-weight:600;color:var(--ok);margin-top:8px">✓ ID check submitted</div>
+        <div style="font-weight:600;font-size:13.5px">Quick ID check <span class="opt">(fastest)</span></div>
+        <div style="font-size:13px;color:var(--muted);margin:4px 0 10px">Use your camera to scan your license and take a quick selfie. It takes about a minute. Or you can add photos below instead.</div>
+        <button type="button" class="btn" id="stripeIdStart" style="padding:9px 16px;font-size:13.5px">Start ID check</button>
+        <div id="stripeIdStatus" style="display:none;font-size:13px;font-weight:600;color:var(--ok);margin-top:8px">✓ ID check done</div>
       </div>
 
       <div class="uploads">
@@ -166,32 +166,32 @@
         <label class="drop" id="dropBack"><div class="ttl">License — back</div><div class="desc">Tap to upload</div><img class="thumb" alt="" /><input type="file" accept="image/*" id="fileBack" /></label>
         <label class="drop" id="dropSelfie"><div class="ttl">Selfie</div><div class="desc">Tap to upload</div><img class="thumb" alt="" /><input type="file" accept="image/*" id="fileSelfie" /></label>
       </div>
-      <div class="err" data-for="uploads" style="margin-top:9px">Please upload all three photos.</div>
+      <div class="err" data-for="uploads" style="margin-top:9px">Please add all three photos.</div>
       <div class="grid" style="margin-top:16px">
-        <div><label class="field" for="licExp">License expiration date <span class="req">*</span></label>
-          <input type="date" id="licExp" /><div class="err" data-for="licExp">Required.</div></div>
+        <div><label class="field" for="licExp">License end date <span class="req">*</span></label>
+          <input type="date" id="licExp" /><div class="err" data-for="licExp">Please fill this in.</div></div>
         <div class="full"><label class="checkrow"><input type="checkbox" id="nameMatch" />
-          <span>I confirm the name and date of birth on this application match my driver's license exactly.</span></label></div>
+          <span>I promise the name and birth date here match my license exactly.</span></label></div>
       </div>
     </section>
 
     <!-- 3. DRIVING -->
     <section class="card" data-step>
       <h2><span class="n">4</span> Driving record</h2>
-      <p class="hint">Self-reported. Please be accurate — discrepancies with the official record can void approval.</p>
+      <p class="hint">Please tell the truth. If this doesn't match the real record, you may not be approved.</p>
       <div class="grid">
         <div><label class="field" for="licStatus">License status <span class="req">*</span></label>
-          <select id="licStatus"><option value="">Select…</option><option value="valid">Valid &amp; current</option><option value="expired">Expired</option><option value="suspended">Suspended</option><option value="revoked">Revoked</option></select>
-          <div class="err" data-for="licStatus">Required.</div></div>
-        <div><label class="field" for="violations">Moving violations (3 yrs) <span class="req">*</span></label>
-          <input type="number" id="violations" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="violations">Required.</div></div>
-        <div><label class="field" for="accidents">At-fault accidents (3 yrs) <span class="req">*</span></label>
-          <input type="number" id="accidents" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="accidents">Required.</div></div>
-        <div><label class="field" for="dui">DUI / DWI (7 yrs) <span class="req">*</span></label>
-          <input type="number" id="dui" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="dui">Required.</div></div>
+          <select id="licStatus"><option value="">Select…</option><option value="valid">Good and current</option><option value="expired">Expired</option><option value="suspended">Suspended</option><option value="revoked">Revoked</option></select>
+          <div class="err" data-for="licStatus">Please fill this in.</div></div>
+        <div><label class="field" for="violations">Tickets (last 3 years) <span class="req">*</span></label>
+          <input type="number" id="violations" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="violations">Please fill this in.</div></div>
+        <div><label class="field" for="accidents">Crashes that were your fault (last 3 years) <span class="req">*</span></label>
+          <input type="number" id="accidents" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="accidents">Please fill this in.</div></div>
+        <div><label class="field" for="dui">Drunk-driving charges (last 7 years) <span class="req">*</span></label>
+          <input type="number" id="dui" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="dui">Please fill this in.</div></div>
         <div class="full"><div class="checkstack">
-          <label class="checkrow"><input type="checkbox" id="priorSusp" /><span>I have had a license suspension in the past 5 years.</span></label>
-          <label class="checkrow"><input type="checkbox" id="reckless" /><span>I have a reckless-driving citation in the past 5 years.</span></label>
+          <label class="checkrow"><input type="checkbox" id="priorSusp" /><span>My license was taken away in the last 5 years.</span></label>
+          <label class="checkrow"><input type="checkbox" id="reckless" /><span>I got a ticket for very dangerous driving in the last 5 years.</span></label>
         </div></div>
       </div>
     </section>
@@ -199,22 +199,22 @@
     <!-- 4. INSURANCE -->
     <section class="card" data-step>
       <h2><span class="n">5</span> Insurance</h2>
-      <p class="hint">If you carry a policy, upload your insurance card or declaration page so we can confirm the coverage. No policy? You may be offered our protection plan.</p>
+      <p class="hint">If you have car insurance, add a photo of your card so we can check it. No insurance? We may offer you our own plan that covers the car.</p>
       <div class="grid">
-        <div class="full"><label class="field">Do you carry an active auto-insurance policy? <span class="req">*</span></label>
+        <div class="full"><label class="field">Do you have your own car insurance right now? <span class="req">*</span></label>
           <div class="checkstack">
-            <label class="checkrow"><input type="radio" name="hasIns" value="yes" /><span>Yes — I have an active policy</span></label>
-            <label class="checkrow"><input type="radio" name="hasIns" value="no" /><span>No — I don't have my own policy</span></label>
+            <label class="checkrow"><input type="radio" name="hasIns" value="yes" /><span>Yes — I have insurance</span></label>
+            <label class="checkrow"><input type="radio" name="hasIns" value="no" /><span>No — I don't have my own</span></label>
           </div><div class="err" data-for="hasIns">Please choose one.</div></div>
-        <div><label class="field" for="insProvider">Insurance provider</label><input type="text" id="insProvider" placeholder="e.g. Geico" /></div>
-        <div><label class="field" for="insPolicy">Policy # (last 4)</label><input type="text" id="insPolicy" maxlength="4" inputmode="numeric" placeholder="1234" /></div>
-        <div><label class="field" for="insExp">Policy expiration date</label><input type="date" id="insExp" /></div>
-        <div><label class="field">Insurance card / dec page <span class="opt">(recommended)</span></label>
-          <label class="drop" id="dropInsurance" style="padding:11px 10px"><div class="ttl">Upload photo</div><div class="desc">Tap to upload</div><img class="thumb" alt="" /><input type="file" accept="image/*" id="fileInsurance" /></label></div>
+        <div><label class="field" for="insProvider">Insurance company</label><input type="text" id="insProvider" placeholder="e.g. Geico" /></div>
+        <div><label class="field" for="insPolicy">Insurance number (last 4)</label><input type="text" id="insPolicy" maxlength="4" inputmode="numeric" placeholder="1234" /></div>
+        <div><label class="field" for="insExp">Insurance end date</label><input type="date" id="insExp" /></div>
+        <div><label class="field">Photo of your insurance card <span class="opt">(helps)</span></label>
+          <label class="drop" id="dropInsurance" style="padding:11px 10px"><div class="ttl">Add photo</div><div class="desc">Tap to upload</div><img class="thumb" alt="" /><input type="file" accept="image/*" id="fileInsurance" /></label></div>
         <div class="full"><div class="checkstack">
-          <label class="checkrow"><input type="checkbox" id="insGood" /><span>My policy is active and in good standing.</span></label>
-          <label class="checkrow"><input type="checkbox" id="insListed" /><span>I am the named insured / a listed driver.</span></label>
-          <label class="checkrow"><input type="checkbox" id="insLimits" /><span>My coverage meets state-minimum liability limits.</span></label>
+          <label class="checkrow"><input type="checkbox" id="insGood" /><span>My insurance is active and paid up.</span></label>
+          <label class="checkrow"><input type="checkbox" id="insListed" /><span>I'm listed on the insurance as a driver.</span></label>
+          <label class="checkrow"><input type="checkbox" id="insLimits" /><span>My insurance is at least as much as my state says I need.</span></label>
         </div></div>
       </div>
     </section>
@@ -224,29 +224,29 @@
       <h2><span class="n">6</span> Rental history</h2>
       <p class="hint">First-time renters are welcome.</p>
       <div class="grid">
-        <div class="full"><label class="field">Have you rented a vehicle before? <span class="req">*</span></label>
+        <div class="full"><label class="field">Have you rented a car before? <span class="req">*</span></label>
           <div class="checkstack">
             <label class="checkrow"><input type="radio" name="rentedBefore" value="yes" /><span>Yes — I've rented before</span></label>
             <label class="checkrow"><input type="radio" name="rentedBefore" value="no" /><span>No — this is my first rental</span></label>
           </div><div class="err" data-for="rentedBefore">Please choose one.</div></div>
-        <div class="full"><label class="checkrow"><input type="checkbox" id="consent" /><span>I authorize verification of my driving record, identity, and the information I've provided, and confirm it is accurate. <span class="req">*</span></span></label>
-        <div class="err" data-for="consent">You must authorize verification to submit.</div></div>
+        <div class="full"><label class="checkrow"><input type="checkbox" id="consent" /><span>I give permission to check my driving record, my ID, and everything I wrote here. I promise it's all true. <span class="req">*</span></span></label>
+        <div class="err" data-for="consent">Please check this box to send your application.</div></div>
       </div>
     </section>
 
     <!-- Optional bank verification (Plaid) — hidden unless the server reports it configured -->
     <section class="card" id="plaidBox" style="display:none">
-      <h2>Bank verification <span class="opt" style="font-size:12px">(optional — strengthens your application)</span></h2>
-      <p class="hint">Securely connect your bank so we can confirm the account is in your name. We never see your login and can't move money.</p>
+      <h2>Bank check <span class="opt" style="font-size:12px">(optional — makes your application stronger)</span></h2>
+      <p class="hint">Safely link your bank so we can check the account is yours. We never see your password and can't touch your money.</p>
       <button type="button" class="btn" id="plaidStart" style="padding:10px 18px;font-size:13.5px">Connect bank</button>
       <div id="plaidStatus" style="display:none;font-size:13px;font-weight:600;color:var(--ok);margin-top:8px">✓ Bank connected</div>
     </section>
 
-    <div class="formError" id="formError">Please fix the highlighted fields above before submitting.</div>
+    <div class="formError" id="formError">Please fix the boxes marked in red, then try again.</div>
 
     <div class="submitbar">
-      <button type="submit" class="btn" id="submitBtn"><span class="spinner"></span><span class="label">Submit application</span></button>
-      <span class="privacy">Sent securely · nothing is shared publicly</span>
+      <button type="submit" class="btn" id="submitBtn"><span class="spinner"></span><span class="label">Send application</span></button>
+      <span class="privacy">Sent safely · never shared</span>
     </div>
   </form>
 
@@ -254,7 +254,7 @@
     <div class="done-card">
       <div class="badge">✓</div>
       <h2>Application received</h2>
-      <p>Thanks, <span id="doneName">there</span>. Your application is in and our team will review it and reach out shortly. You can close this page.</p>
+      <p>Thanks, <span id="doneName">there</span>! We got your application. Our team will look at it and get back to you soon. You can close this page.</p>
     </div>
   </div>
 </div>
@@ -395,8 +395,8 @@ function finishSubmit() {
 }
 function showSubmitError(msg) {
   const btn = $("submitBtn");
-  btn.classList.remove("loading"); btn.disabled = false; btn.querySelector(".label").textContent = "Submit application";
-  $("formError").textContent = "Something went wrong submitting your application: " + msg + ". Please try again.";
+  btn.classList.remove("loading"); btn.disabled = false; btn.querySelector(".label").textContent = "Send application";
+  $("formError").textContent = "Sorry, we couldn't send your application: " + msg + ". Please try again.";
   $("formError").classList.add("show"); $("formError").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 // The no-backend demo fallback must never swallow a real failure on the live
@@ -406,20 +406,20 @@ $("app").addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!validate()) return;
   const btn = $("submitBtn");
-  btn.classList.add("loading"); btn.disabled = true; btn.querySelector(".label").textContent = "Submitting…";
+  btn.classList.add("loading"); btn.disabled = true; btn.querySelector(".label").textContent = "Sending…";
   const payload = gather();
   let res;
   try {
     res = await fetch("/api/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
   } catch (netErr) {
     if (IS_LOCAL && window.DEMO) { window.DEMO.saveLocal(payload); return finishSubmit(); }
-    return showSubmitError("connection problem — check your internet and try again");
+    return showSubmitError("no internet — please check your connection and try again");
   }
   if (!res.ok) {
     let j = null; try { j = await res.json(); } catch (e) {}
     if (j && j.error) return showSubmitError(j.error);
     if (IS_LOCAL && window.DEMO) { window.DEMO.saveLocal(payload); return finishSubmit(); }
-    return showSubmitError("server error " + res.status);
+    return showSubmitError("our server had a problem (error " + res.status + ")");
   }
   finishSubmit();
 });
@@ -468,7 +468,7 @@ function wireVouched(cfg) {
             showErr("uploads", false);
           } else {
             VERIF.vouchedJobId = null; VERIF.vouchedJobToken = null;
-            btn.disabled = false; btn.textContent = "Retry ID verification";
+            btn.disabled = false; btn.textContent = "Retry ID check";
             const st = $("vouchedStatus");
             st.style.display = "block"; st.style.color = "var(--bad)";
             st.textContent = "The instant check didn't pass — try again or upload your photos below.";
@@ -477,10 +477,10 @@ function wireVouched(cfg) {
         },
       });
       vouched.mount("#vouchedMount");
-      btn.textContent = "Start ID verification";
+      btn.textContent = "Start ID check";
     } catch (e) {
-      btn.disabled = false; btn.textContent = "Start ID verification";
-      alert("The instant ID check couldn't start — please upload your photos below instead.");
+      btn.disabled = false; btn.textContent = "Start ID check";
+      alert("The quick ID check couldn't start — please add your photos below instead.");
     }
   });
 }
@@ -510,7 +510,7 @@ function wirePlaid() {
       btn.textContent = "Connect bank";
     } catch (e) {
       btn.disabled = false; btn.textContent = "Connect bank";
-      alert("Bank verification couldn't start — you can skip this step.");
+      alert("The bank check couldn't start — you can skip this step.");
     }
   });
 }
@@ -535,20 +535,20 @@ function wireStripeIdentity(cfg) {
         // The user cancelled/declined or the device is unsupported — fall back
         // to manual uploads. (No error only means "document submitted".)
         VERIF.stripeVerificationSessionId = null;
-        btn.disabled = false; btn.textContent = "Retry ID verification";
+        btn.disabled = false; btn.textContent = "Retry ID check";
         st.style.display = "block"; st.style.color = "var(--bad)";
-        st.textContent = "The instant check didn't complete — try again or upload your photos below.";
+        st.textContent = "The check didn't finish — try again, or add your photos below.";
       } else {
         VERIF.stripeVerificationSessionId = j.id;
         st.style.display = "block"; st.style.color = "var(--ok)";
-        st.textContent = "✓ ID check submitted";
+        st.textContent = "✓ ID check done";
         btn.style.display = "none";
         showErr("uploads", false);
       }
       updateProgress();
     } catch (e) {
-      btn.disabled = false; btn.textContent = "Start ID verification";
-      alert("The instant ID check couldn't start — please upload your photos below instead.");
+      btn.disabled = false; btn.textContent = "Start ID check";
+      alert("The quick ID check couldn't start — please add your photos below instead.");
     }
   });
 }
