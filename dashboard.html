@@ -199,7 +199,7 @@
 
 <div class="controls">
   <div class="stats">
-    <button class="stat" data-filter="all"><div class="n" id="s-all">0</div><div class="l">Everyone</div></button>
+    <button class="stat" data-filter="all"><div class="n" id="s-all">0</div><div class="l">All</div></button>
     <button class="stat review" data-filter="review"><div class="n" id="s-review">0</div><div class="l">Maybe</div></button>
     <button class="stat approve" data-filter="approve"><div class="n" id="s-approve">0</div><div class="l">Good</div></button>
     <button class="stat decline" data-filter="decline"><div class="n" id="s-decline">0</div><div class="l">No</div></button>
@@ -231,7 +231,7 @@ let filter = "all", search = "", sortKey = "new";
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmtDate = (s) => { try { return new Date(s).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { return s; } };
 const verdict = (r) => (r.recommendation || (r.scores && r.scores.verdict) || "review").toLowerCase();
-const DLABEL = { approve: "approved", decline: "declined", followup: "follow-up" };
+const DLABEL = { approve: "approved", decline: "declined", followup: "decide later" };
 let selectedDecision = "";
 function getDemoDecisions() { try { return JSON.parse(localStorage.getItem("vetting_decisions") || "{}"); } catch (e) { return {}; } }
 function setDemoDecision(id, staff) { const m = getDemoDecisions(); m[id] = staff; try { localStorage.setItem("vetting_decisions", JSON.stringify(m)); } catch (e) {} }
@@ -531,7 +531,7 @@ function renderDetail(r) {
   const decisionSec = `<div class="sec decision"><h3>What do you want to do?</h3>` +
     `<div class="dbtns">` +
     `<button class="dbtn${cur0 === "approve" ? " active" : ""}" data-dec="approve">👍 Rent to them</button>` +
-    `<button class="dbtn${cur0 === "followup" ? " active" : ""}" data-dec="followup">🤔 Maybe</button>` +
+    `<button class="dbtn${cur0 === "followup" ? " active" : ""}" data-dec="followup">🤔 Decide later</button>` +
     `<button class="dbtn${cur0 === "decline" ? " active" : ""}" data-dec="decline">👎 Don't rent</button></div>` +
     `<textarea id="decNote" placeholder="Your notes (only you see these)…">${esc(st0.note || "")}</textarea>` +
     `<div class="dsave"><button id="saveDec">Save decision</button><span class="dstatus" id="decStatus">${st0.decided_at ? "Last saved " + esc(timeAgo(st0.decided_at)) : ""}</span></div></div>`;
