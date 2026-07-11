@@ -107,7 +107,7 @@
 
     <!-- 1. APPLICANT -->
     <section class="card" data-step>
-      <h2><span class="n">1</span> Your details</h2>
+      <h2><span class="n">1</span> About you</h2>
       <p class="hint">How we reach you and check who you are.</p>
       <div class="grid">
         <div><label class="field" for="firstName">First name <span class="req">*</span></label>
@@ -141,7 +141,7 @@
 
     <!-- 3. ID -->
     <section class="card" data-step>
-      <h2><span class="n">3</span> Driver's license</h2>
+      <h2><span class="n">3</span> Your license</h2>
       <p class="hint">Add clear photos. The info on your license must match what you typed above — we check it.</p>
 
       <!-- Instant ID verification (Vouched) — hidden unless the server reports it configured -->
@@ -177,11 +177,11 @@
 
     <!-- 3. DRIVING -->
     <section class="card" data-step>
-      <h2><span class="n">4</span> Driving record</h2>
-      <p class="hint">Please tell the truth. If this doesn't match the real record, you may not be approved.</p>
+      <h2><span class="n">4</span> Your driving</h2>
+      <p class="hint">Please tell the truth. If you never had any, just write 0. If this doesn't match the real record, you may not be approved.</p>
       <div class="grid">
         <div><label class="field" for="licStatus">License status <span class="req">*</span></label>
-          <select id="licStatus"><option value="">Select…</option><option value="valid">Good and current</option><option value="expired">Expired</option><option value="suspended">Suspended</option><option value="revoked">Revoked</option></select>
+          <select id="licStatus"><option value="">Pick one…</option><option value="valid">Good — I can drive</option><option value="expired">Expired (ran out)</option><option value="suspended">Suspended (taken away for now)</option><option value="revoked">Revoked (taken away for good)</option></select>
           <div class="err" data-for="licStatus">Please fill this in.</div></div>
         <div><label class="field" for="violations">Tickets (last 3 years) <span class="req">*</span></label>
           <input type="number" id="violations" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="violations">Please fill this in.</div></div>
@@ -221,8 +221,8 @@
 
     <!-- 5. HISTORY + CONSENT -->
     <section class="card" data-step>
-      <h2><span class="n">6</span> Rental history</h2>
-      <p class="hint">First-time renters are welcome.</p>
+      <h2><span class="n">6</span> Have you rented before?</h2>
+      <p class="hint">First-time renters are welcome!</p>
       <div class="grid">
         <div class="full"><label class="field">Have you rented a car before? <span class="req">*</span></label>
           <div class="checkstack">
