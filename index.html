@@ -29,11 +29,26 @@
   .pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#5b8def);border-radius:999px;transition:width .45s cubic-bezier(.4,0,.2,1)}
   .pmeta{font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
 
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px 24px 22px;margin-top:16px;box-shadow:var(--shadow)}
+  .card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px 24px 22px;margin-top:16px;box-shadow:var(--shadow);overflow:hidden}
   @media(max-width:560px){.card{padding:20px 16px 18px}}
-  .card h2{font-size:16px;font-weight:650;margin:0 0 3px;display:flex;align-items:center;gap:10px;letter-spacing:-.1px}
-  .card h2 .n{display:inline-grid;place-items:center;width:24px;height:24px;flex:none;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
-  .card .hint{margin:3px 0 18px;color:var(--muted);font-size:13px;padding-left:34px}
+  /* Thin colored cap on each step, matching its badge hue. */
+  section.card[data-step]::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
+  section.card:nth-of-type(1)::before{background:#1d4ed8}
+  section.card:nth-of-type(2)::before{background:#0d9488}
+  section.card:nth-of-type(3)::before{background:#7c3aed}
+  section.card:nth-of-type(4)::before{background:#c2660a}
+  section.card:nth-of-type(5)::before{background:#db2777}
+  section.card:nth-of-type(6)::before{background:#15a34a}
+  .card h2{font-size:16px;font-weight:650;margin:0 0 3px;display:flex;align-items:center;gap:11px;letter-spacing:-.1px}
+  .card h2 .n{display:inline-grid;place-items:center;width:28px;height:28px;flex:none;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
+  /* A gentle pop of color per step — each numbered badge gets its own hue. */
+  section.card:nth-of-type(1) h2 .n{background:#e6edfe;color:#1d4ed8}
+  section.card:nth-of-type(2) h2 .n{background:#dcf7f1;color:#0d9488}
+  section.card:nth-of-type(3) h2 .n{background:#efe8fd;color:#7c3aed}
+  section.card:nth-of-type(4) h2 .n{background:#fdefdb;color:#c2660a}
+  section.card:nth-of-type(5) h2 .n{background:#fde7f0;color:#db2777}
+  section.card:nth-of-type(6) h2 .n{background:#e3f6e9;color:#15a34a}
+  .card .hint{margin:3px 0 18px;color:var(--muted);font-size:13px;padding-left:39px}
   @media(max-width:560px){.card .hint{padding-left:0}}
 
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
