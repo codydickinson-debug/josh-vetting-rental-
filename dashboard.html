@@ -458,11 +458,11 @@ function renderDetail(r) {
     ["Rental days", d.pickupDate ? `${esc(d.pickupDate)}${d.returnDate ? " → " + esc(d.returnDate) : ""}` : "—"],
     ["Birth date", `${esc(d.dob)}${d.age != null ? " (" + d.age + " yrs)" : ""}`],
     ["Phone", esc(d.phone)], ["Email", esc(d.email)],
-    ["Address", `${esc(d.address)} (${d.yearsAddr} yr)`],
-    ["License", [d.licClass && esc(d.licClass), esc(d.licStatus), "exp " + esc(d.licExp)].filter(Boolean).join(" · ")],
+    ["Address", `${esc(d.address)}${d.yearsAddr ? " (" + d.yearsAddr + " yr)" : ""}`],
+    ["License", [d.licClass && esc(d.licClass), esc(d.licStatus), d.licExp && ("exp " + esc(d.licExp))].filter(Boolean).join(" · ")],
     ["Driving", `${d.violations} violations · ${d.accidents} at-fault · ${d.dui} DUI${d.priorSusp ? " · prior suspension" : ""}${d.reckless ? " · reckless" : ""}`],
-    ["Insurance", d.hasIns === "yes" ? `${esc(d.insProvider || "—")} ••${esc(d.insPolicy || "----")}${d.insExp ? " · exp " + esc(d.insExp) : ""}` : "No personal policy"],
-    ["Rental history", d.rentedBefore === "yes" ? "Has rented before" : "First-time renter"],
+    ["Insurance", d.hasIns === "yes" ? ((d.insProvider || d.insPolicy) ? `${esc(d.insProvider || "—")} ••${esc(d.insPolicy || "----")}${d.insExp ? " · exp " + esc(d.insExp) : ""}` : "Has insurance") : d.hasIns === "no" ? "No personal policy" : "—"],
+    ["Rental history", d.rentedBefore === "yes" ? "Has rented before" : d.rentedBefore === "no" ? "First-time renter" : "—"],
   ].map(([k, val]) => `<tr><td class="k">${k}</td><td>${val}</td></tr>`).join("");
 
   // Third-party verification results (Vouched ID check / Plaid bank link) —

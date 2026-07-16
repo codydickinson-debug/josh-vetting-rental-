@@ -120,8 +120,6 @@
           <input type="tel" id="phone" placeholder="(555) 123-4567" autocomplete="tel" /><div class="err" data-for="phone">Please enter a 10-number phone.</div></div>
         <div><label class="field" for="email">Email <span class="req">*</span></label>
           <input type="email" id="email" placeholder="you@email.com" autocomplete="email" /><div class="err" data-for="email">Please enter a real email.</div></div>
-        <div><label class="field" for="yearsAddr">Years living here <span class="req">*</span></label>
-          <input type="number" id="yearsAddr" min="0" max="80" step="1" placeholder="0" /><div class="err" data-for="yearsAddr">Please fill this in.</div></div>
         <div class="full"><label class="field" for="address">Home address <span class="req">*</span></label>
           <input type="text" id="address" placeholder="Street, City, State ZIP" autocomplete="street-address" /><div class="err" data-for="address">Please type your full address.</div></div>
       </div>
@@ -167,12 +165,6 @@
         <label class="drop" id="dropSelfie"><div class="ttl">Selfie</div><div class="desc">Tap to upload</div><img class="thumb" alt="" /><input type="file" accept="image/*" id="fileSelfie" /></label>
       </div>
       <div class="err" data-for="uploads" style="margin-top:9px">Please add all three photos.</div>
-      <div class="grid" style="margin-top:16px">
-        <div><label class="field" for="licExp">License end date <span class="req">*</span></label>
-          <input type="date" id="licExp" /><div class="err" data-for="licExp">Please fill this in.</div></div>
-        <div class="full"><label class="checkrow"><input type="checkbox" id="nameMatch" />
-          <span>I promise the name and birth date here match my license exactly.</span></label></div>
-      </div>
     </section>
 
     <!-- 3. DRIVING -->
@@ -189,10 +181,6 @@
           <input type="number" id="accidents" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="accidents">Please fill this in.</div></div>
         <div><label class="field" for="dui">Drunk-driving charges (last 7 years) <span class="req">*</span></label>
           <input type="number" id="dui" min="0" max="50" step="1" placeholder="0" /><div class="err" data-for="dui">Please fill this in.</div></div>
-        <div class="full"><div class="checkstack">
-          <label class="checkrow"><input type="checkbox" id="priorSusp" /><span>My license was taken away in the last 5 years.</span></label>
-          <label class="checkrow"><input type="checkbox" id="reckless" /><span>I got a ticket for very dangerous driving in the last 5 years.</span></label>
-        </div></div>
       </div>
     </section>
 
@@ -206,29 +194,16 @@
             <label class="checkrow"><input type="radio" name="hasIns" value="yes" /><span>Yes — I have insurance</span></label>
             <label class="checkrow"><input type="radio" name="hasIns" value="no" /><span>No — I don't have my own</span></label>
           </div><div class="err" data-for="hasIns">Please choose one.</div></div>
-        <div><label class="field" for="insProvider">Insurance company</label><input type="text" id="insProvider" placeholder="e.g. Geico" /></div>
-        <div><label class="field" for="insPolicy">Insurance number (last 4)</label><input type="text" id="insPolicy" maxlength="4" inputmode="numeric" placeholder="1234" /></div>
-        <div><label class="field" for="insExp">Insurance end date</label><input type="date" id="insExp" /></div>
-        <div><label class="field">Photo of your insurance card <span class="opt">(helps)</span></label>
+        <div class="full"><label class="field">Photo of your insurance card <span class="opt">(helps)</span></label>
           <label class="drop" id="dropInsurance" style="padding:11px 10px"><div class="ttl">Add photo</div><div class="desc">Tap to upload</div><img class="thumb" alt="" /><input type="file" accept="image/*" id="fileInsurance" /></label></div>
-        <div class="full"><div class="checkstack">
-          <label class="checkrow"><input type="checkbox" id="insGood" /><span>My insurance is active and paid up.</span></label>
-          <label class="checkrow"><input type="checkbox" id="insListed" /><span>I'm listed on the insurance as a driver.</span></label>
-          <label class="checkrow"><input type="checkbox" id="insLimits" /><span>My insurance is at least as much as my state says I need.</span></label>
-        </div></div>
       </div>
     </section>
 
     <!-- 5. HISTORY + CONSENT -->
     <section class="card" data-step>
-      <h2><span class="n">6</span> Have you rented before?</h2>
-      <p class="hint">First-time renters are welcome!</p>
+      <h2><span class="n">6</span> One last thing</h2>
+      <p class="hint">Please read this and check the box.</p>
       <div class="grid">
-        <div class="full"><label class="field">Have you rented a car before? <span class="req">*</span></label>
-          <div class="checkstack">
-            <label class="checkrow"><input type="radio" name="rentedBefore" value="yes" /><span>Yes — I've rented before</span></label>
-            <label class="checkrow"><input type="radio" name="rentedBefore" value="no" /><span>No — this is my first rental</span></label>
-          </div><div class="err" data-for="rentedBefore">Please choose one.</div></div>
         <div class="full"><label class="checkrow"><input type="checkbox" id="consent" /><span>I give permission to check my driving record, my ID, and everything I wrote here. I promise it's all true. <span class="req">*</span></span></label>
         <div class="err" data-for="consent">Please check this box to send your application.</div></div>
       </div>
@@ -323,18 +298,16 @@ function validate() {
   $("formError").classList.remove("show");
   const errs = [];
   ["firstName", "lastName", "vehicle", "address"].forEach((id) => { if (!$(id).value.trim()) { showErr(id, true); errs.push(id); } });
-  ["yearsAddr", "violations", "accidents", "dui"].forEach((id) => { if ($(id).value.trim() === "") { showErr(id, true); errs.push(id); } });
+  ["violations", "accidents", "dui"].forEach((id) => { if ($(id).value.trim() === "") { showErr(id, true); errs.push(id); } });
   const age = ageFromDOB($("dob").value);
   if (age === null || age < 14 || age > 110) { showErr("dob", true); errs.push("dob"); }
   if (phoneDigits($("phone").value) < 10) { showErr("phone", true); errs.push("phone"); }
   if (!emailValid($("email").value.trim())) { showErr("email", true); errs.push("email"); }
-  if (!$("licExp").value) { showErr("licExp", true); errs.push("licExp"); }
   if (!$("licStatus").value) { showErr("licStatus", true); errs.push("licStatus"); }
   // Manual photos are required unless the renter completed the instant ID check.
   if (!VERIF.vouchedJobId && !VERIF.stripeVerificationSessionId && (!uploads.front || !uploads.back || !uploads.selfie)) { showErr("uploads", true); errs.push("uploads"); }
   if (!$("consent").checked) { showErr("consent", true); errs.push("consent"); }
   if (!document.querySelector('input[name="hasIns"]:checked')) { showErr("hasIns", true); errs.push("hasIns"); }
-  if (!document.querySelector('input[name="rentedBefore"]:checked')) { showErr("rentedBefore", true); errs.push("rentedBefore"); }
   if (errs.length) {
     $("formError").classList.add("show");
     const first = document.querySelector(".err.show, .bad");
@@ -364,24 +337,18 @@ document.querySelectorAll("#app input, #app select").forEach((el) => {
   el.addEventListener("change", updateProgress);
 });
 document.querySelectorAll('input[name="hasIns"]').forEach((el) => el.addEventListener("change", () => showErr("hasIns", false)));
-document.querySelectorAll('input[name="rentedBefore"]').forEach((el) => el.addEventListener("change", () => showErr("rentedBefore", false)));
 $("consent").addEventListener("change", () => showErr("consent", false));
 
 function gather() {
   const insR = document.querySelector('input[name="hasIns"]:checked');
-  const rentR = document.querySelector('input[name="rentedBefore"]:checked');
   return {
     firstName: $("firstName").value.trim(), lastName: $("lastName").value.trim(),
     vehicle: $("vehicle").value.trim(), pickupDate: $("pickupDate").value, returnDate: $("returnDate").value,
     dob: $("dob").value, phone: $("phone").value.trim(), email: $("email").value.trim(),
-    address: $("address").value.trim(), yearsAddr: $("yearsAddr").value,
-    licExp: $("licExp").value, nameMatch: $("nameMatch").checked,
+    address: $("address").value.trim(),
     licStatus: $("licStatus").value, violations: $("violations").value, accidents: $("accidents").value, dui: $("dui").value,
-    priorSusp: $("priorSusp").checked, reckless: $("reckless").checked,
     consent: $("consent").checked,
-    hasIns: insR ? insR.value : "", insProvider: $("insProvider").value.trim(), insPolicy: $("insPolicy").value.trim(), insExp: $("insExp").value,
-    insGood: $("insGood").checked, insListed: $("insListed").checked, insLimits: $("insLimits").checked,
-    rentedBefore: rentR ? rentR.value : "",
+    hasIns: insR ? insR.value : "",
     photos: { front: uploads.front, back: uploads.back, selfie: uploads.selfie, insurance: uploads.insurance },
     vouchedJobId: VERIF.vouchedJobId, vouchedJobToken: VERIF.vouchedJobToken,
     plaidPublicToken: VERIF.plaidPublicToken, plaidInstitution: VERIF.plaidInstitution,
