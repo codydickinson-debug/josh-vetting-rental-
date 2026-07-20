@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Verify your ID</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --surface:#ffffff; --text:#141821; --muted:#68707d;
+    --border:#e5e8ec; --border-2:#d3d8df; --accent:#1d4ed8; --accent-soft:#eef3fe;
+    --primary:#141821; --primary-h:#2a3140;
+    --ok:#15803d; --ok-bg:#edf6ef; --ok-bd:#cfe6d5;
+    --warn:#b45309; --bad:#b91c1c; --bad-bg:#fbecea; --bad-bd:#f0cfcb;
+    --r:10px;
+    --shadow:0 1px 2px rgba(16,20,28,.05),0 6px 20px -12px rgba(16,20,28,.12);
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);background:linear-gradient(180deg,#edf0f4 0%,var(--bg) 260px);color:var(--text);line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased;min-height:100vh}
+  body::before{content:"";position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),#5b8def);z-index:10}
+  .wrap{max-width:520px;margin:0 auto;padding:44px 18px 90px}
+
+  header.top{margin-bottom:6px;text-align:center}
+  header.top .eyebrow{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:7px}
+  header.top h1{font-size:26px;font-weight:700;letter-spacing:-.4px;margin:0}
+  header.top p{margin:9px auto 0;color:var(--muted);font-size:14.5px;max-width:420px}
+
+  .card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:24px 24px 22px;margin-top:20px;box-shadow:var(--shadow)}
+  @media(max-width:560px){.card{padding:20px 16px 18px}}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  label.field{display:block;font-size:13.5px;font-weight:600;color:#374050;margin-bottom:7px}
+  label.field .req{color:var(--bad)}
+  /* 16px minimum — anything smaller makes iPhones zoom in on every tap */
+  input[type=text]{width:100%;padding:12px 14px;min-height:48px;border:1px solid var(--border-2);border-radius:8px;font-size:16px;color:var(--text);background:var(--surface);font-family:var(--font);transition:border-color .15s,box-shadow .15s}
+  input::placeholder{color:#9aa1ab}
+  input:hover:not(:focus){border-color:#bfc6d0}
+  input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,78,216,.13)}
+  input.bad{border-color:var(--bad);box-shadow:0 0 0 3px rgba(185,28,28,.12)}
+  .err{color:var(--bad);font-size:12.5px;margin-top:5px;display:none}
+  .err.show{display:block}
+
+  .idbox{margin-top:18px;border:1px solid var(--border);border-radius:9px;padding:18px 16px;background:#f5f8ff;text-align:center}
+  .idbox .idt{font-weight:650;font-size:15px}
+  .idbox .idd{font-size:13px;color:var(--muted);margin:5px auto 14px;max-width:340px}
+  .status{display:none;font-size:13.5px;font-weight:600;color:var(--ok);margin-top:12px}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:none;border-radius:9px;padding:14px 28px;min-height:52px;font-family:var(--font);font-size:16px;font-weight:600;cursor:pointer;color:#fff;background:var(--primary);box-shadow:0 1px 2px rgba(16,20,28,.2);transition:background .15s,transform .15s,box-shadow .15s;width:100%}
+  .btn:hover{background:var(--primary-h);transform:translateY(-1px);box-shadow:0 4px 12px -4px rgba(16,20,28,.35)}
+  .btn:active{transform:translateY(0);box-shadow:0 1px 2px rgba(16,20,28,.2)}
+  .btn[disabled]{opacity:.65;cursor:default;transform:none;box-shadow:none}
+  .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+  .btn.loading .spinner{display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .formError{display:none;margin-top:16px;background:var(--bad-bg);border:1px solid var(--bad-bd);color:#8d2018;border-radius:6px;padding:11px 13px;font-size:13.5px;font-weight:600}
+  .formError.show{display:block}
+  .privacy{font-size:12.5px;color:var(--muted);text-align:center;margin-top:16px}
+
+  #done{display:none}
+  #done.show{display:block}
+  .done-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:56px 30px;text-align:center;margin-top:24px;box-shadow:var(--shadow)}
+  .done-card .badge{width:62px;height:62px;border-radius:50%;margin:0 auto 20px;display:grid;place-items:center;font-size:28px;color:#fff;background:var(--ok);box-shadow:0 0 0 10px var(--ok-bg);animation:pop .45s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .done-card h2{font-size:21px;font-weight:700;margin:0 0 8px;letter-spacing:-.2px}
+  .done-card p{margin:0 auto;color:var(--muted);font-size:14.5px;max-width:400px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="eyebrow">Identity check</div>
+    <h1>Verify your ID</h1>
+    <p>Quick and secure. Type your name, then scan your ID and take a quick selfie with your camera. Takes about a minute.</p>
+  </header>
+
+  <section class="card" id="card">
+    <div class="grid">
+      <div><label class="field" for="firstName">First name <span class="req">*</span></label>
+        <input type="text" id="firstName" autocomplete="given-name" /><div class="err" data-for="firstName">Please enter your first name.</div></div>
+      <div><label class="field" for="lastName">Last name <span class="req">*</span></label>
+        <input type="text" id="lastName" autocomplete="family-name" /><div class="err" data-for="lastName">Please enter your last name.</div></div>
+    </div>
+
+    <div class="idbox">
+      <div class="idt">Photo ID + selfie</div>
+      <div class="idd">You'll scan the front of your ID and take a quick selfie. Your info is sent securely to Stripe.</div>
+      <button type="button" class="btn" id="startBtn"><span class="spinner"></span><span class="label">Start ID check</span></button>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="formError" id="formError"></div>
+    <div class="privacy">🔒 Secure · powered by Stripe Identity</div>
+  </section>
+
+  <section class="card" id="unavailable" style="display:none">
+    <h2 style="margin:0 0 6px;font-size:17px;font-weight:650">ID check isn't available right now</h2>
+    <p style="margin:0;color:var(--muted);font-size:14px">Please check back soon, or reach out to the person who sent you this link.</p>
+  </section>
+
+  <div id="done">
+    <div class="done-card">
+      <div class="badge">✓</div>
+      <h2>You're all set!</h2>
+      <p>Thanks, <span id="doneName">there</span>. Your ID check is done. You can close this page.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+let PUBKEY = null;
+
+function showErr(id, on) {
+  const el = document.querySelector('.err[data-for="' + id + '"]');
+  if (el) el.classList.toggle("show", on);
+  const inp = $(id); if (inp) inp.classList.toggle("bad", on);
+}
+["firstName", "lastName"].forEach((id) => $(id).addEventListener("input", () => showErr(id, false)));
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src; s.async = true;
+    s.onload = resolve; s.onerror = () => reject(new Error("failed to load " + src));
+    document.head.appendChild(s);
+  });
+}
+function setBtn(label, loading) {
+  const b = $("startBtn");
+  b.querySelector(".label").textContent = label;
+  b.classList.toggle("loading", !!loading);
+  b.disabled = !!loading;
+}
+
+async function startCheck() {
+  const first = $("firstName").value.trim(), last = $("lastName").value.trim();
+  let bad = false;
+  if (!first) { showErr("firstName", true); bad = true; }
+  if (!last) { showErr("lastName", true); bad = true; }
+  if (bad) return;
+  $("formError").classList.remove("show");
+  setBtn("Loading…", true);
+  try {
+    if (!window.Stripe) await loadScript("https://js.stripe.com/v3/");
+    const res = await fetch("/api/stripe-verification-session", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}),
+    });
+    const j = await res.json();
+    if (!res.ok || !j.client_secret || !j.id) throw new Error(j.error || "could not start");
+    const stripe = window.Stripe(PUBKEY);
+    const { error } = await stripe.verifyIdentity(j.client_secret);
+    if (error) {
+      // The person cancelled/declined or the device is unsupported.
+      setBtn("Try again", false);
+      const st = $("status"); st.style.display = "block"; st.style.color = "var(--bad)";
+      st.textContent = "The check didn't finish — please try again.";
+      return;
+    }
+    // Document submitted — record it against this person's name.
+    setBtn("Finishing…", true);
+    const sres = await fetch("/api/verify", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ firstName: first, lastName: last, stripeVerificationSessionId: j.id }),
+    });
+    const sj = await sres.json().catch(() => ({}));
+    if (!sres.ok) throw new Error(sj.error || "could not save");
+    $("doneName").textContent = first;
+    $("card").style.display = "none";
+    $("done").classList.add("show");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (e) {
+    setBtn("Start ID check", false);
+    $("formError").textContent = "Sorry, the ID check couldn't be completed. Please try again.";
+    $("formError").classList.add("show");
+  }
+}
+
+// Wire the button only when Stripe Identity is configured on the server.
+(async () => {
+  let cfg = null;
+  try {
+    const res = await fetch("/api/verification-config");
+    if (res.ok) cfg = await res.json();
+  } catch (e) { /* no backend reachable */ }
+  if (cfg && cfg.stripe && cfg.stripe.enabled && cfg.stripe.publishableKey) {
+    PUBKEY = cfg.stripe.publishableKey;
+    $("startBtn").addEventListener("click", startCheck);
+  } else {
+    $("card").style.display = "none";
+    $("unavailable").style.display = "block";
+  }
+})();
+</script>
+</body>
+</html>
