@@ -87,6 +87,11 @@
   .dhead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .dhead h2{font-size:22px;font-weight:650;margin:0;letter-spacing:-.3px}
   .dhead .meta{font-size:13px;color:var(--muted);margin-top:3px}
+  .dhead .contact{display:flex;flex-wrap:wrap;gap:5px 12px;margin-top:6px;font-size:14px}
+  .dhead .contact a{color:var(--accent);text-decoration:none;font-weight:600}
+  .dhead .contact a:hover{text-decoration:underline}
+  .dhead .contact .sep{color:var(--border-2)}
+  .dhead .contact .nocontact{color:var(--muted);font-weight:400}
   .chips{display:flex;gap:9px;flex-wrap:wrap}
   .chip{border:1px solid var(--border);border-radius:10px;padding:10px 15px;text-align:center;min-width:86px;background:var(--surface);box-shadow:var(--shadow)}
   .chip .n{font-size:22px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
@@ -407,6 +412,15 @@ function renderDetail(r) {
   const ic = ai.identity_check || {}, da = ai.document_authenticity || {}, inc = ai.insurance_check || {};
   const ex = ic.extracted || {};
 
+  // Contact line under the name — email + phone as click-to-email / click-to-call
+  // links (phone may be absent on ID-only /verify rows; both may be absent).
+  const email = r.email || d.email || "";
+  const phone = d.phone || "";
+  const contactBits = [];
+  if (email) contactBits.push(`<a href="mailto:${esc(email)}">✉️ ${esc(email)}</a>`);
+  if (phone) contactBits.push(`<a href="tel:${esc(phone.replace(/[^\d+]/g, ""))}">📞 ${esc(phone)}</a>`);
+  const contactHtml = contactBits.length ? contactBits.join('<span class="sep">·</span>') : '<span class="nocontact">No contact info on file</span>';
+
   const cats = [{ key: "mvr", name: "Driving record" }, { key: "fraud", name: "Honesty check" }, { key: "insurance", name: "Insurance" }, { key: "rental", name: "Rental history" }];
   const catHtml = cats.map((c) => {
     const cat = (s.categories && s.categories[c.key]) || { points: 0, cap: 0, lines: [] };
@@ -541,7 +555,7 @@ function renderDetail(r) {
   p.innerHTML = `
     <div class="toprow"><button class="back" id="backBtn">← All applications</button><div class="rightacts"><button class="printbtn" id="printBtn">Print / Save PDF</button><button class="delbtn" id="delBtn">🗑 Delete</button></div></div>
     <div class="dhead">
-      <div><h2>${esc(r.applicant_name || "Unknown")}</h2><div class="meta">Submitted ${esc(fmtDate(r.created_at))} · ${esc(r.email || "")}</div>${d.vehicle ? `<div class="wants">Wants: <strong>${esc(d.vehicle)}</strong>${d.pickupDate ? " · " + esc(d.pickupDate) + (d.returnDate ? " → " + esc(d.returnDate) : "") : ""}</div>` : ""}</div>
+      <div><h2>${esc(r.applicant_name || "Unknown")}</h2><div class="contact">${contactHtml}</div><div class="meta">Submitted ${esc(fmtDate(r.created_at))}</div>${d.vehicle ? `<div class="wants">Wants: <strong>${esc(d.vehicle)}</strong>${d.pickupDate ? " · " + esc(d.pickupDate) + (d.returnDate ? " → " + esc(d.returnDate) : "") : ""}</div>` : ""}</div>
     </div>
     ${verdictBanner(v)}
     ${prosConsBlock}
