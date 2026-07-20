@@ -6,7 +6,7 @@
 
 import { randomUUID } from "node:crypto";
 import { getAdminClient } from "../lib/db.js";
-import { fetchStripeVerification, stripeEnabled } from "../lib/verification.js";
+import { fetchStripeVerification, stripeEnabled, buildIdOnlyAssessment } from "../lib/verification.js";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -33,28 +33,11 @@ export default async function handler(req, res) {
     verification.stripe = await fetchStripeVerification(String(body.stripeVerificationSessionId).slice(0, 128), applicantName);
   }
   const stx = verification.stripe || {};
-  const verified = stx.verified === true;
-  const processing = stx.status === "processing";
-  const recommendation = verified ? "approve" : "review";
-
   // A light, AI-shaped summary so the dashboard renders a verdict + pros/cons
-  // for these ID-only entries (no real AI photo assessment is run here).
-  const ai = {
-    recommendation,
-    confidence: verified ? "high" : "medium",
-    summary: verified
-      ? `${applicantName} passed the Stripe ID check, and the name on the ID matches.`
-      : processing
-        ? `${applicantName} finished the ID check — Stripe is still processing the result. Check back shortly.`
-        : `${applicantName}'s ID check did not fully pass. Take a closer look before renting.`,
-    strengths: verified ? ["Passed the Stripe ID check.", "The name on the ID matches this person."] : [],
-    concerns: verified
-      ? []
-      : [processing ? "The ID check is still processing." : "The ID check did not pass, or the name did not match — check before renting."],
-    identity_check: {}, document_authenticity: {}, insurance_check: {},
-    credibility_flags: [], document_notes: "",
-    ai_score: verified ? 5 : 50,
-  };
+  // for these ID-only entries (no real AI photo assessment is run here). The
+  // dashboard re-checks "processing" rows and rebuilds this same shape once
+  // Stripe finishes, so a pending check that passes flips to "approve" itself.
+  const { recommendation, ai, verified } = buildIdOnlyAssessment(applicantName, stx);
 
   const row = {
     id: randomUUID(),

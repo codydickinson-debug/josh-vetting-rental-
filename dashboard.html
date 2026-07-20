@@ -158,6 +158,9 @@
   .toprow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
   .printbtn{background:var(--surface);border:1px solid var(--border-2);border-radius:7px;padding:7px 14px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s}
   .printbtn:hover{background:#f7f8fa;border-color:#bfc6d0}
+  .rightacts{display:flex;gap:8px}
+  .delbtn{background:var(--surface);border:1px solid var(--border-2);border-radius:7px;padding:7px 14px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;color:var(--bad);transition:background .15s,border-color .15s}
+  .delbtn:hover{background:var(--bad-bg);border-color:var(--bad-bd)}
   .decision .dbtns{display:flex;gap:8px;flex-wrap:wrap}
   .dbtn{border:1px solid var(--border-2);background:var(--surface);border-radius:8px;padding:9px 17px;font-family:var(--font);font-size:13.5px;font-weight:600;cursor:pointer;color:var(--text);transition:background .15s,border-color .15s}
   .dbtn:hover{background:#f7f8fa;border-color:#bfc6d0}
@@ -171,7 +174,7 @@
   .dsave button:hover{background:#2a3140}
   .dstatus{font-size:12.5px;color:var(--muted)}
   @media print{
-    .topbar,#demoBanner,.controls,.list,.login,.back,.printbtn,.decision .dbtns,.dsave{display:none!important}
+    .topbar,#demoBanner,.controls,.list,.login,.back,.printbtn,.delbtn,.decision .dbtns,.dsave{display:none!important}
     details.more>summary{display:none} details.more>*:not(summary){display:block!important}
     body{display:block}.layout{display:block}.detail{overflow:visible;padding:0}.panel{max-width:100%}
     .sec{break-inside:avoid;border-color:#ccc}
@@ -536,7 +539,7 @@ function renderDetail(r) {
     `<textarea id="decNote" placeholder="Your notes (only you see these)…">${esc(st0.note || "")}</textarea>` +
     `<div class="dsave"><button id="saveDec">Save decision</button><span class="dstatus" id="decStatus">${st0.decided_at ? "Last saved " + esc(timeAgo(st0.decided_at)) : ""}</span></div></div>`;
   p.innerHTML = `
-    <div class="toprow"><button class="back" id="backBtn">← All applications</button><button class="printbtn" id="printBtn">Print / Save PDF</button></div>
+    <div class="toprow"><button class="back" id="backBtn">← All applications</button><div class="rightacts"><button class="printbtn" id="printBtn">Print / Save PDF</button><button class="delbtn" id="delBtn">🗑 Delete</button></div></div>
     <div class="dhead">
       <div><h2>${esc(r.applicant_name || "Unknown")}</h2><div class="meta">Submitted ${esc(fmtDate(r.created_at))} · ${esc(r.email || "")}</div>${d.vehicle ? `<div class="wants">Wants: <strong>${esc(d.vehicle)}</strong>${d.pickupDate ? " · " + esc(d.pickupDate) + (d.returnDate ? " → " + esc(d.returnDate) : "") : ""}</div>` : ""}</div>
     </div>
@@ -563,6 +566,32 @@ function renderDetail(r) {
   const sd = $("saveDec"); if (sd) sd.addEventListener("click", () => saveDecision(r.id, selectedDecision, $("decNote") ? $("decNote").value : ""));
   const pb = $("printBtn"); if (pb) pb.addEventListener("click", () => window.print());
   const bb = $("backBtn"); if (bb) bb.addEventListener("click", () => $("layout").classList.remove("showdetail"));
+  const db = $("delBtn"); if (db) db.addEventListener("click", () => deleteApplicant(r.id, r.applicant_name));
+}
+
+// Remove a bad lead. Confirms first (hard delete, can't be undone), then drops
+// it locally and re-renders. Mirrors saveDecision's demo/live handling so it
+// also works when viewing sample data with no backend.
+async function deleteApplicant(id, name) {
+  if (!confirm(`Delete ${name || "this applicant"}? This permanently removes them and can't be undone.`)) return;
+  const dropLocal = () => {
+    DATA = DATA.filter((r) => r.id !== id);
+    if (activeId === id) {
+      activeId = null; lastDetailKey = null; renderedBaseline = null;
+      $("panel").style.display = "none"; $("empty").style.display = "grid";
+      $("layout").classList.remove("showdetail");
+    }
+    refreshAll();
+  };
+  let res;
+  try { res = await fetch("/api/delete", { method: "POST", headers: { "Content-Type": "application/json", "x-dashboard-key": KEY }, body: JSON.stringify({ id }) }); }
+  catch (e) { return IS_LOCAL ? dropLocal() : alert("Couldn't delete — connection problem. Try again."); }
+  if (!res.ok) {
+    if (IS_LOCAL) return dropLocal();
+    let j = null; try { j = await res.json(); } catch (e) {}
+    return alert("Couldn't delete: " + cleanErr((j && j.error) || ("server error " + res.status)));
+  }
+  dropLocal();
 }
 
 function logout() { stopPolling(); sessionStorage.removeItem("vetkey"); KEY = ""; $("login").style.display = "grid"; $("pw").value = ""; $("pw").focus(); }
