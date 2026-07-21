@@ -470,17 +470,21 @@ function renderDetail(r) {
   const photos = ["front", "back", "selfie", "insurance"].map((k) => urls[k]
     ? `<figure><img src="${urls[k]}" alt="${k}" /><figcaption>${k === "front" ? "License — Front" : k === "back" ? "License — Back" : k === "selfie" ? "Selfie" : "Insurance"}</figcaption></figure>` : "").join("");
 
-  const kv = [
-    ["Car they want", esc(d.vehicle || "—")],
-    ["Rental days", d.pickupDate ? `${esc(d.pickupDate)}${d.returnDate ? " → " + esc(d.returnDate) : ""}` : "—"],
-    ["Birth date", `${esc(d.dob)}${d.age != null ? " (" + d.age + " yrs)" : ""}`],
-    ["Phone", esc(d.phone)], ["Email", esc(d.email)],
-    ["Address", `${esc(d.address)} (${d.yearsAddr} yr)`],
-    ["License", [d.licClass && esc(d.licClass), esc(d.licStatus), "exp " + esc(d.licExp)].filter(Boolean).join(" · ")],
-    ["Driving", `${d.violations} violations · ${d.accidents} at-fault · ${d.dui} DUI${d.priorSusp ? " · prior suspension" : ""}${d.reckless ? " · reckless" : ""}`],
-    ["Insurance", d.hasIns === "yes" ? `${esc(d.insProvider || "—")} ••${esc(d.insPolicy || "----")}${d.insExp ? " · exp " + esc(d.insExp) : ""}` : "No personal policy"],
-    ["Rental history", d.rentedBefore === "yes" ? "Has rented before" : "First-time renter"],
-  ].map(([k, val]) => `<tr><td class="k">${k}</td><td>${val}</td></tr>`).join("");
+  // Only show rows we actually have data for — the ID-check form collects just
+  // name, email, phone and the car, so the full driving/insurance rows would
+  // otherwise render as "undefined" for those submissions.
+  const kvRows = [];
+  if (d.vehicle) kvRows.push(["Car they want", esc(d.vehicle)]);
+  if (d.pickupDate) kvRows.push(["Rental days", `${esc(d.pickupDate)}${d.returnDate ? " → " + esc(d.returnDate) : ""}`]);
+  if (d.phone) kvRows.push(["Phone", esc(d.phone)]);
+  if (d.email) kvRows.push(["Email", esc(d.email)]);
+  if (d.dob) kvRows.push(["Birth date", `${esc(d.dob)}${d.age != null ? " (" + d.age + " yrs)" : ""}`]);
+  if (d.address) kvRows.push(["Address", `${esc(d.address)}${d.yearsAddr != null ? " (" + esc(String(d.yearsAddr)) + " yr)" : ""}`]);
+  if (d.licStatus || d.licExp || d.licClass) kvRows.push(["License", [d.licClass && esc(d.licClass), d.licStatus && esc(d.licStatus), d.licExp && ("exp " + esc(d.licExp))].filter(Boolean).join(" · ")]);
+  if (d.violations != null || d.accidents != null || d.dui != null) kvRows.push(["Driving", `${d.violations || 0} violations · ${d.accidents || 0} at-fault · ${d.dui || 0} DUI${d.priorSusp ? " · prior suspension" : ""}${d.reckless ? " · reckless" : ""}`]);
+  if (d.hasIns) kvRows.push(["Insurance", d.hasIns === "yes" ? `${esc(d.insProvider || "—")} ••${esc(d.insPolicy || "----")}${d.insExp ? " · exp " + esc(d.insExp) : ""}` : "No personal policy"]);
+  if (d.rentedBefore) kvRows.push(["Rental history", d.rentedBefore === "yes" ? "Has rented before" : "First-time renter"]);
+  const kv = kvRows.map(([k, val]) => `<tr><td class="k">${k}</td><td>${val}</td></tr>`).join("") || `<tr><td colspan="2" style="color:var(--muted)">No extra details on file.</td></tr>`;
 
   // Third-party verification results (Vouched ID check / Plaid bank link) —
   // only present on submissions where the renter used those steps.

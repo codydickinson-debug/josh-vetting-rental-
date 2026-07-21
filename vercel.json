@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/", "destination": "/verify", "permanent": false },
+    { "source": "/index", "destination": "/verify", "permanent": false }
+  ],
   "crons": [
     { "path": "/api/keepalive", "schedule": "0 9 * * *" }
   ],
