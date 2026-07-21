@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Verify your ID</title>
+<title>Reserve your car</title>
 <style>
   :root{
     --bg:#f4f5f7; --surface:#ffffff; --text:#141821; --muted:#68707d;
@@ -31,10 +31,11 @@
 
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
   @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .full{margin-top:14px}
   label.field{display:block;font-size:13.5px;font-weight:600;color:#374050;margin-bottom:7px}
   label.field .req{color:var(--bad)}
   /* 16px minimum — anything smaller makes iPhones zoom in on every tap */
-  input[type=text]{width:100%;padding:12px 14px;min-height:48px;border:1px solid var(--border-2);border-radius:8px;font-size:16px;color:var(--text);background:var(--surface);font-family:var(--font);transition:border-color .15s,box-shadow .15s}
+  input[type=text],input[type=email],input[type=tel]{width:100%;padding:12px 14px;min-height:48px;border:1px solid var(--border-2);border-radius:8px;font-size:16px;color:var(--text);background:var(--surface);font-family:var(--font);transition:border-color .15s,box-shadow .15s}
   input::placeholder{color:#9aa1ab}
   input:hover:not(:focus){border-color:#bfc6d0}
   input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,78,216,.13)}
@@ -72,9 +73,9 @@
 <div class="wrap">
 
   <header class="top">
-    <div class="eyebrow">Identity check</div>
-    <h1>Verify your ID</h1>
-    <p>Quick and secure. Type your name, then scan your ID and take a quick selfie with your camera. Takes about a minute.</p>
+    <div class="eyebrow">Car rental</div>
+    <h1>Reserve your car</h1>
+    <p>Enter your details and verify your ID with a quick photo and selfie. Takes about a minute.</p>
   </header>
 
   <section class="card" id="card">
@@ -83,12 +84,20 @@
         <input type="text" id="firstName" autocomplete="given-name" /><div class="err" data-for="firstName">Please enter your first name.</div></div>
       <div><label class="field" for="lastName">Last name <span class="req">*</span></label>
         <input type="text" id="lastName" autocomplete="family-name" /><div class="err" data-for="lastName">Please enter your last name.</div></div>
+      <div><label class="field" for="email">Email <span class="req">*</span></label>
+        <input type="email" id="email" inputmode="email" autocomplete="email" /><div class="err" data-for="email">Please enter a valid email.</div></div>
+      <div><label class="field" for="phone">Phone number <span class="req">*</span></label>
+        <input type="tel" id="phone" inputmode="tel" autocomplete="tel" /><div class="err" data-for="phone">Please enter your phone number.</div></div>
+    </div>
+    <div class="full">
+      <label class="field" for="vehicle">Which car do you want? <span class="req">*</span></label>
+      <input type="text" id="vehicle" placeholder="e.g. 2024 Toyota RAV4" /><div class="err" data-for="vehicle">Please tell us which car you want.</div>
     </div>
 
     <div class="idbox">
       <div class="idt">Photo ID + selfie</div>
       <div class="idd">You'll scan the front of your ID and take a quick selfie. Your info is sent securely to Stripe.</div>
-      <button type="button" class="btn" id="startBtn"><span class="spinner"></span><span class="label">Start ID check</span></button>
+      <button type="button" class="btn" id="startBtn"><span class="spinner"></span><span class="label">Verify my ID &amp; submit</span></button>
       <div class="status" id="status"></div>
     </div>
 
@@ -105,7 +114,7 @@
     <div class="done-card">
       <div class="badge">✓</div>
       <h2>You're all set!</h2>
-      <p>Thanks, <span id="doneName">there</span>. Your ID check is done. You can close this page.</p>
+      <p>Thanks, <span id="doneName">there</span>. We got your request and your ID check is done. You can close this page.</p>
     </div>
   </div>
 </div>
@@ -113,6 +122,7 @@
 <script>
 "use strict";
 const $ = (id) => document.getElementById(id);
+const FIELDS = ["firstName", "lastName", "email", "phone", "vehicle"];
 let PUBKEY = null;
 
 function showErr(id, on) {
@@ -120,7 +130,7 @@ function showErr(id, on) {
   if (el) el.classList.toggle("show", on);
   const inp = $(id); if (inp) inp.classList.toggle("bad", on);
 }
-["firstName", "lastName"].forEach((id) => $(id).addEventListener("input", () => showErr(id, false)));
+FIELDS.forEach((id) => $(id).addEventListener("input", () => showErr(id, false)));
 
 function loadScript(src) {
   return new Promise((resolve, reject) => {
@@ -136,19 +146,24 @@ function setBtn(label, loading) {
   b.classList.toggle("loading", !!loading);
   b.disabled = !!loading;
 }
+const val = (id) => $(id).value.trim();
+const emailOk = (s) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
 
 async function startCheck() {
-  const first = $("firstName").value.trim(), last = $("lastName").value.trim();
+  const data = { firstName: val("firstName"), lastName: val("lastName"), email: val("email"), phone: val("phone"), vehicle: val("vehicle") };
   let bad = false;
-  if (!first) { showErr("firstName", true); bad = true; }
-  if (!last) { showErr("lastName", true); bad = true; }
+  if (!data.firstName) { showErr("firstName", true); bad = true; }
+  if (!data.lastName) { showErr("lastName", true); bad = true; }
+  if (!emailOk(data.email)) { showErr("email", true); bad = true; }
+  if (!data.phone) { showErr("phone", true); bad = true; }
+  if (!data.vehicle) { showErr("vehicle", true); bad = true; }
   if (bad) return;
   $("formError").classList.remove("show");
   setBtn("Loading…", true);
   try {
     if (!window.Stripe) await loadScript("https://js.stripe.com/v3/");
     const res = await fetch("/api/stripe-verification-session", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: data.email }),
     });
     const j = await res.json();
     if (!res.ok || !j.client_secret || !j.id) throw new Error(j.error || "could not start");
@@ -161,21 +176,21 @@ async function startCheck() {
       st.textContent = "The check didn't finish — please try again.";
       return;
     }
-    // Document submitted — record it against this person's name.
+    // Document submitted — record the request against this person.
     setBtn("Finishing…", true);
     const sres = await fetch("/api/verify", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ firstName: first, lastName: last, stripeVerificationSessionId: j.id }),
+      body: JSON.stringify({ ...data, stripeVerificationSessionId: j.id }),
     });
     const sj = await sres.json().catch(() => ({}));
     if (!sres.ok) throw new Error(sj.error || "could not save");
-    $("doneName").textContent = first;
+    $("doneName").textContent = data.firstName;
     $("card").style.display = "none";
     $("done").classList.add("show");
     window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (e) {
-    setBtn("Start ID check", false);
-    $("formError").textContent = "Sorry, the ID check couldn't be completed. Please try again.";
+    setBtn("Verify my ID & submit", false);
+    $("formError").textContent = "Sorry, that couldn't be completed. Please try again.";
     $("formError").classList.add("show");
   }
 }

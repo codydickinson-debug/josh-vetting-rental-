@@ -22,6 +22,11 @@ export default async function handler(req, res) {
   const lastName = String(body.lastName || "").trim();
   if (!firstName || !lastName) return res.status(400).json({ error: "Please enter your first and last name." });
   const applicantName = `${firstName} ${lastName}`.trim();
+  // Extra request details the form collects (all optional server-side; the form
+  // enforces them). Stored on the row so the dashboard shows contact + car.
+  const email = String(body.email || "").trim();
+  const phone = String(body.phone || "").trim().slice(0, 40);
+  const vehicle = String(body.vehicle || "").trim().slice(0, 120);
 
   let supabase;
   try { supabase = getAdminClient(); }
@@ -42,11 +47,11 @@ export default async function handler(req, res) {
   const row = {
     id: randomUUID(),
     applicant_name: applicantName,
-    email: String(body.email || "").trim() || null,
+    email: email || null,
     rule_total: 0,
     ai_score: ai.ai_score,
     recommendation,
-    data: { firstName, lastName, source: "id-verification-link" },
+    data: { firstName, lastName, email, phone, vehicle, source: "id-verification-link" },
     scores: {},
     ai,
     photos: {},
