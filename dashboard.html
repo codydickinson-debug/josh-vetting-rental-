@@ -142,6 +142,11 @@
   .docrow{display:flex;gap:12px;flex-wrap:wrap}
   .docrow figure{margin:0;text-align:center;font-size:11px;color:var(--muted)}
   .docrow img{max-height:130px;max-width:200px;border:1px solid var(--border);border-radius:7px;display:block;background:#f0f1f3}
+  .license .idphotos-grid{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start}
+  .license figure{margin:0;text-align:center;font-size:11px;color:var(--muted)}
+  .license img.idimg{max-height:280px;max-width:100%;border:1px solid var(--border);border-radius:8px;display:block;background:#f0f1f3;min-width:140px;min-height:90px}
+  .license figcaption{margin-top:6px;font-weight:600}
+  .idnote{font-size:12.5px;color:var(--muted);margin-top:10px}
 
   .login{position:fixed;inset:0;background:radial-gradient(900px 500px at 50% -10%,#2a3140,#15181f 70%);display:grid;place-items:center;z-index:50}
   .login .box{background:var(--surface);border-radius:14px;padding:34px 30px 30px;width:360px;box-shadow:0 24px 60px rgba(0,0,0,.45)}
@@ -556,6 +561,19 @@ function renderDetail(r) {
     `<button class="dbtn${cur0 === "decline" ? " active" : ""}" data-dec="decline">👎 Don't rent</button></div>` +
     `<textarea id="decNote" placeholder="Your notes (only you see these)…">${esc(st0.note || "")}</textarea>` +
     `<div class="dsave"><button id="saveDec">Save decision</button><span class="dstatus" id="decStatus">${st0.decided_at ? "Last saved " + esc(timeAgo(st0.decided_at)) : ""}</span></div></div>`;
+  // Driver's license + selfie pulled from Stripe so the operator can view the ID
+  // right here instead of opening Stripe. Shown prominently (not collapsed).
+  const stxImg = (r.verification && r.verification.stripe && !r.verification.stripe.error) ? r.verification.stripe : null;
+  let licenseSec = "";
+  if (stxImg && ((stxImg.documentFiles && stxImg.documentFiles.length) || stxImg.selfieFile)) {
+    const dt = stxImg.documentType ? " · " + esc(String(stxImg.documentType).replace(/_/g, " ")) : "";
+    const sid = esc(stxImg.sessionId || "");
+    const figs = [];
+    if (stxImg.documentFiles && stxImg.documentFiles.length) figs.push(`<figure><img class="idimg" data-session="${sid}" data-which="document" alt="Driver's license" /><figcaption>License</figcaption></figure>`);
+    if (stxImg.documentFiles && stxImg.documentFiles.length > 1) figs.push(`<figure><img class="idimg" data-session="${sid}" data-which="document2" alt="License back" /><figcaption>Back</figcaption></figure>`);
+    if (stxImg.selfieFile) figs.push(`<figure><img class="idimg" data-session="${sid}" data-which="selfie" alt="Selfie" /><figcaption>Selfie</figcaption></figure>`);
+    licenseSec = `<div class="sec license"><h3>Driver's license${dt}</h3><div class="idphotos-grid">${figs.join("")}</div><div class="idnote" id="idnote">Loading…</div></div>`;
+  }
   p.innerHTML = `
     <div class="toprow"><button class="back" id="backBtn">← All applications</button><div class="rightacts"><button class="printbtn" id="printBtn">Print / Save PDF</button><button class="delbtn" id="delBtn">🗑 Delete</button></div></div>
     <div class="dhead">
@@ -563,6 +581,7 @@ function renderDetail(r) {
     </div>
     ${verdictBanner(v)}
     ${prosConsBlock}
+    ${licenseSec}
     ${decisionSec}
     <details class="more">
       <summary>Show all the details</summary>
@@ -585,6 +604,37 @@ function renderDetail(r) {
   const pb = $("printBtn"); if (pb) pb.addEventListener("click", () => window.print());
   const bb = $("backBtn"); if (bb) bb.addEventListener("click", () => $("layout").classList.remove("showdetail"));
   const db = $("delBtn"); if (db) db.addEventListener("click", () => deleteApplicant(r.id, r.applicant_name));
+  loadIdImages();
+}
+
+// Load the license/selfie images through the password-gated proxy and show them
+// (blob URLs keep the dashboard key in the request header, never in a URL).
+const idImageCache = {};
+async function loadIdImages() {
+  const imgs = Array.from(document.querySelectorAll("img.idimg:not([data-loaded])"));
+  if (!imgs.length) return;
+  const note = $("idnote");
+  const results = await Promise.all(imgs.map(async (img) => {
+    img.setAttribute("data-loaded", "1");
+    const s = img.getAttribute("data-session"), w = img.getAttribute("data-which");
+    const key = s + ":" + w;
+    try {
+      let url = idImageCache[key];
+      if (!url) {
+        const r = await fetch("/api/verify-image?session=" + encodeURIComponent(s) + "&which=" + encodeURIComponent(w), { headers: { "x-dashboard-key": KEY } });
+        if (!r.ok) throw new Error("http " + r.status);
+        url = URL.createObjectURL(await r.blob());
+        idImageCache[key] = url;
+      }
+      img.src = url; img.style.cursor = "zoom-in";
+      img.addEventListener("click", () => window.open(url, "_blank"));
+      return true;
+    } catch (e) {
+      const f = img.closest("figure"); if (f) f.style.display = "none";
+      return false;
+    }
+  }));
+  if (note) note.textContent = results.some(Boolean) ? "" : "Couldn't load the license images. Make sure the Stripe key has \"Files Read\" permission enabled.";
 }
 
 // Remove a bad lead. Confirms first (hard delete, can't be undone), then drops
