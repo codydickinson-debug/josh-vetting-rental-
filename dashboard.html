@@ -240,6 +240,9 @@ let KEY = sessionStorage.getItem("vetkey") || "";
 let DATA = [];
 let activeId = null;
 let filter = "all", search = "", sortKey = "new";
+// license/selfie blob URLs, keyed by `${sessionId}:${which}` — cached so a
+// re-render re-uses the loaded image instead of blanking or re-fetching it.
+const idImageCache = {};
 
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmtDate = (s) => { try { return new Date(s).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { return s; } };
@@ -562,16 +565,24 @@ function renderDetail(r) {
     `<textarea id="decNote" placeholder="Your notes (only you see these)…">${esc(st0.note || "")}</textarea>` +
     `<div class="dsave"><button id="saveDec">Save decision</button><span class="dstatus" id="decStatus">${st0.decided_at ? "Last saved " + esc(timeAgo(st0.decided_at)) : ""}</span></div></div>`;
   // Driver's license + selfie pulled from Stripe so the operator can view the ID
-  // right here instead of opening Stripe. Shown prominently (not collapsed).
+  // right here instead of opening Stripe. Shown for ANY renter with a Stripe
+  // session (past renters included) — the images are resolved live from the
+  // session, so old rows work even without stored file ids. Cached blob URLs are
+  // embedded on re-render so the images never blank out.
   const stxImg = (r.verification && r.verification.stripe && !r.verification.stripe.error) ? r.verification.stripe : null;
   let licenseSec = "";
-  if (stxImg && ((stxImg.documentFiles && stxImg.documentFiles.length) || stxImg.selfieFile)) {
+  if (stxImg && stxImg.sessionId) {
     const dt = stxImg.documentType ? " · " + esc(String(stxImg.documentType).replace(/_/g, " ")) : "";
-    const sid = esc(stxImg.sessionId || "");
-    const figs = [];
-    if (stxImg.documentFiles && stxImg.documentFiles.length) figs.push(`<figure><img class="idimg" data-session="${sid}" data-which="document" alt="Driver's license" /><figcaption>License</figcaption></figure>`);
-    if (stxImg.documentFiles && stxImg.documentFiles.length > 1) figs.push(`<figure><img class="idimg" data-session="${sid}" data-which="document2" alt="License back" /><figcaption>Back</figcaption></figure>`);
-    if (stxImg.selfieFile) figs.push(`<figure><img class="idimg" data-session="${sid}" data-which="selfie" alt="Selfie" /><figcaption>Selfie</figcaption></figure>`);
+    const sid = esc(stxImg.sessionId);
+    const nfiles = (stxImg.documentFiles && stxImg.documentFiles.length) || 0;
+    const fig = (w, label) => {
+      const cached = idImageCache[stxImg.sessionId + ":" + w];
+      const pre = cached ? ` src="${cached}" data-loaded="1" style="cursor:zoom-in"` : "";
+      return `<figure><img class="idimg" data-session="${sid}" data-which="${w}"${pre} alt="${esc(label)}" /><figcaption>${esc(label)}</figcaption></figure>`;
+    };
+    const figs = [fig("document", "License")];
+    if (nfiles !== 1) figs.push(fig("document2", "Back"));   // skip only when we KNOW there's one page
+    figs.push(fig("selfie", "Selfie"));
     licenseSec = `<div class="sec license"><h3>Driver's license${dt}</h3><div class="idphotos-grid">${figs.join("")}</div><div class="idnote" id="idnote">Loading…</div></div>`;
   }
   p.innerHTML = `
@@ -609,12 +620,13 @@ function renderDetail(r) {
 
 // Load the license/selfie images through the password-gated proxy and show them
 // (blob URLs keep the dashboard key in the request header, never in a URL).
-const idImageCache = {};
+// Only fetches images not already cached/loaded, so re-renders don't re-hit
+// Stripe or flicker; a figure is hidden only if its image truly isn't available.
 async function loadIdImages() {
-  const imgs = Array.from(document.querySelectorAll("img.idimg:not([data-loaded])"));
-  if (!imgs.length) return;
   const note = $("idnote");
-  const results = await Promise.all(imgs.map(async (img) => {
+  const imgs = Array.from(document.querySelectorAll("img.idimg:not([data-loaded])"));
+  if (!imgs.length) { if (note && document.querySelector("img.idimg[src]")) note.textContent = ""; return; }
+  await Promise.all(imgs.map(async (img) => {
     img.setAttribute("data-loaded", "1");
     const s = img.getAttribute("data-session"), w = img.getAttribute("data-which");
     const key = s + ":" + w;
@@ -627,14 +639,14 @@ async function loadIdImages() {
         idImageCache[key] = url;
       }
       img.src = url; img.style.cursor = "zoom-in";
-      img.addEventListener("click", () => window.open(url, "_blank"));
-      return true;
+      img.onclick = () => window.open(url, "_blank");
     } catch (e) {
       const f = img.closest("figure"); if (f) f.style.display = "none";
-      return false;
     }
   }));
-  if (note) note.textContent = results.some(Boolean) ? "" : "Couldn't load the license images. Make sure the Stripe key has \"Files Read\" permission enabled.";
+  if (note) note.textContent = document.querySelector("img.idimg[src]")
+    ? ""
+    : "No license image on file for this person (or the Stripe key still needs \"Files Read\").";
 }
 
 // Remove a bad lead. Confirms first (hard delete, can't be undone), then drops
